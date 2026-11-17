@@ -9,6 +9,7 @@ Deutschsprachige Browser-App für historische Multi-Asset-Analyse, Geldmengen, I
 ## Funktionen
 
 - S&P 500, Dow Jones, DAX, Nasdaq 100, Nikkei 225, Gold-/Silber-Futures, WTI/Brent-Spotpreise.
+- Kryptowährungen in USD: Bitcoin, Ethereum, BNB, XRP, Solana, Cardano, Dogecoin, TRON und Chainlink.
 - Geldmengen: USD M2, EUR M3 sowie GBP/JPY M3 als ausdrücklich bezeichnete Archivserien.
 - Tages-/Monatsdaten über den vollständigen verfügbaren Zeitraum der jeweiligen Quelle; SQLite/D1 mit Quellennachweis und Importprotokoll.
 - Mehrere Assets, freie Datumsauswahl, Basis-100-Vergleich, Originalwerte, logarithmische Achse, Tooltip und CSV-Export.
@@ -38,7 +39,7 @@ Die Konsole zeigt die lokale URL (normalerweise http://localhost:5173). **Datenb
 npm run data:download
 ```
 
-Schreibt `work/data/market-atlas.sqlite`, 15 CSV-/JSON-Dateien und ein Quellenmanifest. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
+Schreibt `work/data/market-atlas.sqlite`, CSV-/JSON-Dateien für alle 24 Reihen und ein Quellenmanifest. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
 
 ```sh
 node scripts/import-archive.mjs http://localhost:5173

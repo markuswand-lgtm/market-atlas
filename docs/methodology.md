@@ -8,7 +8,11 @@ Yahoo-Tagesreihen werden mit explizitem `period1` und `period2` angefordert. `ra
 
 DAX ist ein Performanceindex, US-Indizes sind Kursindizes. Gold und Silber verwenden Yahoo-Futuresreihen; sie sind keine Spotreihen und enthalten kein explizites Rollrenditemodell. WTI und Brent verwenden EIA-Spotpreise über FRED. Die Rohreihen sind keine unmittelbar handelbaren Portfolios.
 
-## Geldmenge
+## Kryptowährungen
+
+Bitcoin, Ethereum, BNB, XRP, Solana, Cardano, Dogecoin, TRON und Chainlink werden als tägliche USD-Reihen über Yahoo Finance geladen. Sie handeln auch am Wochenende; SMA-Fenster zählen Beobachtungen, nicht Börsentage. CAGR verwendet weiterhin tatsächliche Kalendertage. Staking, Airdrops, Fork-Ausschüttungen und Netzwerkgebühren sind nicht modelliert. Die abgerufene BTC-Reihe beginnt 2014, ETH 2017; fehlende Frühhistorien werden nicht künstlich ergänzt. Vergleich, Deflation, Trends und Strategieauswertung verwenden dieselben Rechenregeln wie bei anderen positiven Preisreihen.
+
+## Geldmengenreihen
 
 - USD: Federal Reserve, M2SL, saisonbereinigt, Mrd. USD, via FRED.
 - EUR: EZB, BSI.M.U2.Y.V.M30.X.1.U2.2300.Z01.E, M3 saison-/kalenderbereinigt; Millionen EUR / 1000 = Mrd. EUR.
@@ -36,4 +40,6 @@ Long/Cash-SMA. Signal mit Schlusskurs t−1, Ausführung am Schluss t und Rendit
 
 ## Bildtranskription
 
-Original: `public/reference/market-cycle-original.png`, vom Nutzer bereitgestellt. Strukturierte Jahresangaben: `lib/cycles.ts`. A = Panik, B = hohe Preise, C = niedrige Preise nach der Behauptung im Bild. Zeile B enthält sichtbar 1891 und 1899 innerhalb späterer Jahre. Diese Angaben werden unverändert gespeichert und als Unsicherheit erklärt. Die in der Grafik zusätzlich enthaltenen Abstands-/Innenzahlen sind keine Datumswerte. Die Zeitachse im Tool ist maßstäblich; die ursprüngliche Grafik ist es nicht. Keine wissenschaftlich validierte Prognose, keine automatische Handelsempfehlung.
+Aktive Vorlage: das zuletzt hochgeladene Bild `public/reference/market-cycle-revised.png` (Periods When to Make Money). Die erste Bildfassung bleibt als `market-cycle-original.png` erhalten. Strukturierte Jahresangaben: `lib/cycles.ts`: 8 A-, 15 B- und 16 C-Jahre. Gegenüber der ersten Vorlage gelten B: 1962 und 1980; C: 1985 sowie zusätzlich 2050. Die Jahresangaben wurden am neuen Bild geprüft.
+
+A = Panik, B = hohe Preise, C = niedrige Preise gemäß der historischen These. Die Jahresmarker verwenden den 1. Januar ausschließlich zur Darstellung; die Vorlage gibt keine Tagesdaten an. Ein schematischer B/C-Zickzack wird bei Aktivierung im Hauptdiagramm in einem eigenen Band auf derselben Kalenderzeitachse gezeichnet. Seine Höhe hat keine Preisskala und verändert weder Kursdaten noch Kennzahlen. A/B/C lassen sich filtern; Zukunftsjahre sind mit der Erweiterung bis 2060 sichtbar. Segmente am Rand werden durch Clipping des vollständigen Verlaufs korrekt fortgesetzt. Keine wissenschaftlich validierte Prognose und keine automatische Handelsempfehlung.

@@ -4,7 +4,7 @@ import {downsample,type Point} from '../lib/analytics';
 import {CYCLES,CYCLE_POINTS} from '../lib/cycles';
 import {timeDomain} from '../lib/display';
 
-export type ChartLine={id:string;name:string;color:string;points:Point[];dashed?:boolean};
+export type ChartLine={id:string;name:string;color:string;points:Point[];dashed?:boolean;gapDays?:number;frequency?:'daily'|'monthly'|'annual'};
 const fmt=(n:number)=>new Intl.NumberFormat('de-DE',{notation:Math.abs(n)>99999?'compact':'standard',maximumFractionDigits:1}).format(n);
 type Props={lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean;from?:string;to?:string};
 
@@ -12,7 +12,7 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
  const uid=useId().replace(/:/g,'');
  const [hover,setHover]=useState<number|null>(null);
  const model=useMemo(()=>{
-  const valid=lines.map(l=>({...l,points:downsample(l.points.filter(p=>(!log||p.value>0)&&(!from||p.date>=from)&&(!to||p.date<=to)))}));
+  const valid=lines.map(l=>{const original=l.points.filter(p=>(!log||p.value>0)&&(!from||p.date>=from)&&(!to||p.date<=to));const segments:Point[][]=[];for(const p of original){const last=segments.at(-1),previous=last?.at(-1);if(!last||previous&&l.gapDays&&(Date.parse(p.date)-Date.parse(previous.date))/86400000>l.gapDays)segments.push([p]);else last.push(p);}const reduced=segments.map(s=>downsample(s));return {...l,segments:reduced,points:reduced.flat()};});
   const all=valid.flatMap(l=>l.points);
   if(!all.length)return null;
   let minY=Infinity,maxY=-Infinity;
@@ -51,8 +51,8 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
    {[0,1,2,3,4,5].map(i=>{const d=minX+i/5*(maxX-minX);return <text key={i} x={x(d)} y={H-9} textAnchor="middle" fill="#7f8998" fontSize="11">{new Date(d).toLocaleDateString('de-DE',{year:'numeric',...(maxX-minX<86400000*800?{month:'short'}:{})})}</text>})}
    <g clipPath={`url(#${uid}-plot)`}>
     {cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).flatMap(([key,c])=>c.years.filter(inRange).map(year=><g key={`${key}-${year}`}><line x1={x(Date.UTC(year,0,1))} x2={x(Date.UTC(year,0,1))} y1={T} y2={priceBottom} stroke={c.color} strokeOpacity={key==='A'?.45:.18} strokeDasharray="4 6"/><text x={x(Date.UTC(year,0,1))+4} y={T+12+(['A','B','C'].indexOf(key)*14)} fontSize="10" fill={c.color}>{key} {year}</text></g>))}
-    {valid[0]?.points.length>1&&valid.length<3&&<path d={`${path(valid[0].points)} L${x(valid[0].points.at(-1)!.date)},${priceBottom} L${x(valid[0].points[0].date)},${priceBottom} Z`} fill={`url(#${uid}-fill)`}/>}
-    {valid.map(l=><path key={l.id} d={path(l.points)} fill="none" stroke={l.color} strokeWidth={l.dashed?1.6:2} strokeDasharray={l.dashed?'7 5':undefined} vectorEffect="non-scaling-stroke"/>)}
+    {valid[0]?.points.length>1&&valid[0].segments.length===1&&valid.length<3&&<path d={`${path(valid[0].points)} L${x(valid[0].points.at(-1)!.date)},${priceBottom} L${x(valid[0].points[0].date)},${priceBottom} Z`} fill={`url(#${uid}-fill)`}/>}
+    {valid.map(l=><path key={l.id} d={l.segments.map(segment=>path(segment)).join(' ')} fill="none" stroke={l.color} strokeWidth={l.dashed?1.6:2} strokeDasharray={l.dashed?'7 5':undefined} vectorEffect="non-scaling-stroke"/>)}
     {hoverDate!==null&&<line x1={x(hoverDate)} x2={x(hoverDate)} y1={T} y2={priceBottom} stroke="#a6afbd" strokeDasharray="3 4"/>}
     {nearest.map(l=><circle key={l.id} cx={x(l.point.date)} cy={y(l.point.value)} r="4" fill={l.color} stroke="#161b23" strokeWidth="2"/>)}
    </g>
@@ -69,7 +69,7 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
     </g>
    </g>}
   </svg>
-  {hoverDate!==null&&<div className="chart-tooltip"><b>{new Date(hoverDate).toLocaleDateString('de-DE')}</b>{!nearest.length&&<p>Keine Beobachtung in diesem Zeitraum</p>}{nearest.map(l=><div key={l.id}><span style={{color:l.color}}>● {l.name}</span><strong>{fmt(l.point.value)}</strong><small>{l.point.date}</small></div>)}</div>}
+  {hoverDate!==null&&<div className="chart-tooltip"><b>{new Date(hoverDate).toLocaleDateString('de-DE')}</b>{!nearest.length&&<p>Keine Beobachtung in diesem Zeitraum</p>}{nearest.map(l=><div key={l.id}><span style={{color:l.color}}>● {l.name}</span><strong>{fmt(l.point.value)}</strong><small>{l.frequency==='annual'?`${l.point.date.slice(0,4)} · Jahreswert`:l.frequency==='monthly'?l.point.date.slice(0,7):l.point.date}</small></div>)}</div>}
   <div className="chart-legend">{lines.map(l=><span key={l.id}><i style={{background:l.color}}/>{l.name}{l.dashed?' · Trend':''}</span>)}{cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).map(([k,c])=><span key={k}><i style={{background:c.color}}/>{k} · {c.label}</span>)}</div>
  </div>;
 }

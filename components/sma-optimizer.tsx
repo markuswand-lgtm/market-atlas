@@ -1,0 +1,32 @@
+'use client';
+import {useEffect,useRef,useState} from 'react';
+import {DEFAULT_SEARCH,optimizeSma,searchPairs,type SearchOptions,type SearchResult} from '../lib/optimize';
+import type {Point} from '../lib/analytics';
+import Chart from './chart';
+import {comparisonLines} from '../lib/display';
+
+const percent=(n:number|null|undefined)=>n==null?'—':new Intl.NumberFormat('de-DE',{style:'percent',maximumFractionDigits:2}).format(n);
+type Props={asset:string;points:Point[];from:string;to:string;cost:number;capital:number;loading:boolean;normalized:boolean;currency:string;onApply:(fast:number,slow:number)=>void};
+export default function SmaOptimizer({asset,points,from,to,cost,capital,loading,normalized,currency,onApply}:Props){
+ const [options,setOptions]=useState<SearchOptions>({...DEFAULT_SEARCH}),[result,setResult]=useState<SearchResult|null>(null),[error,setError]=useState(''),[running,setRunning]=useState(false),[progress,setProgress]=useState('');
+ const controller=useRef<AbortController|null>(null),revision=useRef(0);
+ useEffect(()=>{revision.current++;controller.current?.abort();setResult(null);setError('');setRunning(false);setProgress('');return()=>{controller.current?.abort();};},[asset,points,from,to,cost,capital,options,loading]);
+ async function run(){const runId=++revision.current,abort=new AbortController();controller.current?.abort();controller.current=abort;setRunning(true);setResult(null);setError('');try{const r=await optimizeSma(points,from,to,cost,capital,options,{signal:abort.signal,onProgress:(done,total)=>{if(runId===revision.current)setProgress(`${done} / ${total} Kombinationen`);}});if(runId===revision.current&&!abort.signal.aborted)setResult(r);}catch(e){if(runId===revision.current)setError((e as Error).message);}finally{if(runId===revision.current)setRunning(false);}}
+ let combinations='';try{combinations=`${searchPairs(options).length} Kombinationen`;}catch(e){combinations=(e as Error).message;}
+ function option(key:keyof SearchOptions,value:number|string){setOptions(old=>({...old,[key]:value}));}
+ const fields:[keyof SearchOptions,string][]=[['fastMin','Schnell ab'],['fastMax','Schnell bis'],['fastStep','Schritt schnell'],['slowMin','Langsam ab'],['slowMax','Langsam bis'],['slowStep','Schritt langsam']];
+ return <section className="optimizer">
+  <div className="panel-heading"><div><span className="eyebrow">PARAMETER SYSTEMATISCH PRÜFEN</span><h3>Optimale SMA-Kombination suchen</h3><p className="muted">{asset} · bester Kandidat im gewählten Suchraster, nach Handelskosten.</p></div><span className="badge">Training + separater Prüfzeitraum</span></div>
+  <div className="strategy-controls">{fields.map(([key,label])=><label key={key}>{label}<input type="number" min={key.endsWith('Step')?1:2} max="1000" step="1" value={options[key]} onChange={e=>option(key,+e.target.value)}/></label>)}</div>
+  <div className="strategy-controls"><label>Optimierungsziel<select value={options.objective} onChange={e=>option('objective',e.target.value)}><option value="cagr">Höchste Jahresrendite</option><option value="balanced">Jahresrendite minus maximaler Rückgang</option></select></label><label>Training (% der Beobachtungen)<input type="number" min="50" max="90" value={options.trainingPercent} onChange={e=>option('trainingPercent',+e.target.value)}/></label><button className="primary-button" disabled={loading||running||!points.length} onClick={run}>{running?'Suche läuft …':'SMA optimieren'}</button>{running&&<button className="quiet-button" onClick={()=>controller.current?.abort()}>Abbrechen</button>}</div>
+  <p className="method-note">{running?progress:combinations}. Alle Kandidaten verwenden denselben Trainingszeitraum nach dem längsten Aufwärmfenster. Die letzten {100-options.trainingPercent} % bleiben für die nachträgliche Prüfung reserviert. Auswahl ausschließlich anhand des Trainings; Gleichstand: geringerer Rückgang, dann kleinere Fenster.</p>
+  {error&&<p className="notice warning" role="alert">{error}</p>}
+  {result&&<>
+   <div className="optimizer-result" role="status"><div><span className="eyebrow">BESTE GETESTETE KOMBINATION</span><h3>SMA {result.best.fast} / {result.best.slow}</h3><p>{result.tested} Kombinationen · {result.options.objective==='cagr'?'höchste Jahresrendite':'Jahresrendite minus maximaler Rückgang'}</p></div><button className="primary-button" onClick={()=>onApply(result.best.fast,result.best.slow)}>Werte in Backtest übernehmen</button></div>
+   <div className="table-scroll"><table><thead><tr><th>Abschnitt</th><th>Zeitraum</th><th>Rendite p. a.</th><th>Gesamtrendite</th><th>Max. Rückgang</th><th>Buy & Hold</th></tr></thead><tbody>{[{name:'Training · Auswahl',from:result.trainingFrom,to:result.trainingTo,r:result.training},{name:'Prüfung · ungenutzt bei Auswahl',from:result.validationFrom,to:result.validationTo,r:result.validation}].map(v=><tr key={v.name}><td>{v.name}</td><td>{v.from}<small>bis {v.to}</small></td><td>{percent(v.r.metrics?.cagr)}</td><td>{percent(v.r.metrics?.total)}</td><td>{percent(v.r.metrics?.drawdown)}</td><td>{percent(v.r.holdMetrics?.total)}</td></tr>)}</tbody></table></div>
+   <Chart from={result.validationFrom} to={result.validationTo} lines={comparisonLines([{id:'validation',name:`Prüfung · SMA ${result.best.fast}/${result.best.slow}`,color:'#b4a5f8',points:result.validation.strategy},{id:'holdout-hold',name:'Prüfung · Buy & Hold',color:'#7a9aaa',points:result.validation.benchmark}],normalized)} label={normalized?'Prüfzeitraum · Index · Start = 100':`Prüfzeitraum · Modellkapital · ${currency}`}/>
+   <details><summary>Die besten Trainingskandidaten</summary><div className="table-scroll"><table><thead><tr><th>Rang</th><th>Schnell / Langsam</th><th>Rendite p. a.</th><th>Max. Rückgang</th><th>Einstiege</th></tr></thead><tbody>{result.ranking.map((r,i)=><tr key={`${r.fast}-${r.slow}`}><td>{i+1}</td><td>{r.fast} / {r.slow}</td><td>{percent(r.cagr)}</td><td>{percent(r.drawdown)}</td><td>{r.entries}</td></tr>)}</tbody></table></div></details>
+  </>}
+  <p className="method-note">„Optimal“ gilt nur für dieses Suchraster, Ziel und Trainingsfenster. Häufiges Nachjustieren nach Sichtung des Prüfzeitraums überpasst auch diesen. Ergebnisse garantieren keine künftigen Gewinne. Training und Prüfung beginnen jeweils mit Cash und tragen eigene Ein-/Ausstiegskosten.</p>
+ </section>;
+}

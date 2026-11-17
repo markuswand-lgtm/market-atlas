@@ -3,7 +3,7 @@ import {ASSETS,ARCHIVED_IDS} from '../../../lib/catalog';
 import {download} from '../../../lib/providers';
 import {applyRefresh} from '../../../lib/refresh';
 
-export function GET(){return Response.json({ids:ASSETS.filter(a=>!ARCHIVED_IDS.includes(a.id)).map(a=>a.id),archivedIds:ARCHIVED_IDS,instructions:'POST JSON {"id":"<id>"} to this endpoint for each active series in ids sequentially. Archived series were discontinued in 2023 and remain stored without daily refresh. Repeat the same id while remaining > 0. Retry transient failures up to twice, then continue and report failures. Read GET /api/data afterwards to verify persisted retrieved_at, count and last_date. Source errors preserve existing data. Requires owner-private Site service access, without a browser session.'},{headers:{'Cache-Control':'no-store'}});}
+export function GET(){return Response.json({ids:ASSETS.filter(a=>!ARCHIVED_IDS.includes(a.id)).map(a=>a.id),archivedIds:ARCHIVED_IDS,instructions:'POST JSON {"id":"<id>"} to this endpoint for each active series in ids sequentially. Archived historical series remain stored at their documented source edition without daily refresh. Repeat the same id while remaining > 0. Retry transient failures up to twice, then continue and report failures. Read GET /api/data afterwards to verify persisted retrieved_at, count and last_date. Source errors preserve existing data. Requires owner-private Site service access, without a browser session.'},{headers:{'Cache-Control':'no-store'}});}
 export async function POST(req:Request){
  const origin=req.headers.get('origin');
  if(origin&&origin!==new URL(req.url).origin)return Response.json({error:'Origin nicht erlaubt.'},{status:403});

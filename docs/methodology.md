@@ -8,6 +8,8 @@ Yahoo-Tagesreihen werden mit explizitem `period1` und `period2` angefordert. `ra
 
 DAX ist ein Performanceindex, US-Indizes sind Kursindizes. Gold und Silber verwenden Yahoo-Futuresreihen; sie sind keine Spotreihen und enthalten kein explizites Rollrenditemodell. WTI und Brent verwenden EIA-Spotpreise über FRED. Die Rohreihen sind keine unmittelbar handelbaren Portfolios.
 
+Zusätzliche Langzeitreihen mit Beobachtungen vor 1890 sind unter [Historische Quellen](historical-sources.md) dokumentiert. Jahreswerte werden bei Inflationsbereinigung näherungsweise durch das Mittel aller zwölf CPI-Monate des jeweiligen Jahres geteilt; unvollständige CPI-Jahre werden ausgelassen.
+
 ## Kryptowährungen
 
 Bitcoin, Ethereum, BNB, XRP, Solana, Cardano, Dogecoin, TRON und Chainlink werden als tägliche USD-Reihen über Yahoo Finance geladen. Sie handeln auch am Wochenende; SMA-Fenster zählen Beobachtungen, nicht Börsentage. CAGR verwendet weiterhin tatsächliche Kalendertage. Staking, Airdrops, Fork-Ausschüttungen und Netzwerkgebühren sind nicht modelliert. Die abgerufene BTC-Reihe beginnt 2014, ETH 2017; fehlende Frühhistorien werden nicht künstlich ergänzt. Vergleich, Deflation, Trends und Strategieauswertung verwenden dieselben Rechenregeln wie bei anderen positiven Preisreihen.
@@ -36,7 +38,7 @@ Die gewählten Von-/Bis-Daten bestimmen die Zeitachse exakt; MAX setzt den Begin
 
 ## Strategietest
 
-Long/Cash-SMA. Signal mit Schlusskurs t−1, Ausführung am Schluss t und Rendite ab t nach t+1. Aufwärmhistorie liegt vor dem effektiven Testbeginn. Falls der gewählte Beginn zu früh liegt, verschiebt die Oberfläche ihn auf die erste Beobachtung nach dem langsamen SMA-Fenster und zeigt dies an. Die Rechenfunktion selbst lehnt unzureichende Aufwärmhistorie ab. Ein gestarteter Test wird bei Asset-, Parameter-, Zeitraum- oder Datenänderungen neu berechnet; während des Ladens erscheint kein veraltetes Ergebnis. Handelskosten in Basispunkten pro Positionswechsel inklusive Einstieg und Schlussliquidation. Buy & Hold trägt Ein- und Ausstiegskosten. Cash ist unverzinst. Keine Steuern, Slippage, Rollkosten oder zusätzliche Dividendenmodellierung. Keine Parameteroptimierung oder Out-of-sample-Validierung. Revidierbare Quellendaten statt Vintage-Historie.
+Long/Cash-SMA. Signal mit Schlusskurs t−1, Ausführung am Schluss t und Rendite ab t nach t+1. Aufwärmhistorie liegt vor dem effektiven Testbeginn. Falls der gewählte Beginn zu früh liegt, verschiebt die Oberfläche ihn auf die erste Beobachtung nach dem langsamen SMA-Fenster und zeigt dies an. Die Rechenfunktion selbst lehnt unzureichende Aufwärmhistorie ab. Ein gestarteter Test wird bei Asset-, Parameter-, Zeitraum- oder Datenänderungen neu berechnet; während des Ladens erscheint kein veraltetes Ergebnis. Handelskosten in Basispunkten pro Positionswechsel inklusive Einstieg und Schlussliquidation. Buy & Hold trägt Ein- und Ausstiegskosten. Cash ist unverzinst. Keine Steuern, Slippage, Rollkosten oder zusätzliche Dividendenmodellierung. Die optionale [Parametersuche](sma-optimization.md) verwendet ein gemeinsames Trainingsfenster und einen späteren, bei der Auswahl ungenutzten Prüfzeitraum. Revidierbare Quellendaten statt Vintage-Historie.
 
 ## Bildtranskription
 

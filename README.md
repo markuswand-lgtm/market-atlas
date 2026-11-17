@@ -21,6 +21,9 @@ Deutschsprachige Browser-App für historische Multi-Asset-Analyse, Geldmengen, I
 - MAX-Zeitachse ab 1890, mit sichtbaren Datenlücken vor Beginn der jeweiligen Quelle. Basis 100 erhält standardmäßig jede Historie; gemeinsamer Start ist optional.
 - Strategielabor folgt der Asset-Auswahl und berechnet gestartete Tests bei Änderungen an Parametern, Zeiträumen und Daten neu. Fehlende Aufwärmhistorie verschiebt den tatsächlichen Testbeginn sichtbar.
 
+- Acht zusätzliche Langzeitreihen: US-Aktien und CPI ab 1871, deutsche Aktien ab 1870, früher Dow, Gold ab 1850, Silber ab 1833 und Öl ab 1859. [Quellen und Unterschiede](docs/historical-sources.md).
+- SMA-Erklärung und einstellbare Parametersuche mit Kosten, gemeinsamem Trainingsfenster und anschließendem Prüfzeitraum. [Methodik der Optimierung](docs/sma-optimization.md).
+
 ## Lokal starten
 
 Node.js **24 LTS** empfohlen (mindestens 22.13 für die App; die Archivskripte verwenden integriertes TypeScript-Stripping und `node:sqlite`).
@@ -42,7 +45,7 @@ Die Konsole zeigt die lokale URL (normalerweise http://localhost:5173). **Datenb
 npm run data:download
 ```
 
-Schreibt `work/data/market-atlas.sqlite`, CSV-/JSON-Dateien für alle 24 Reihen und ein Quellenmanifest. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
+Schreibt `work/data/market-atlas.sqlite`, CSV-/JSON-Dateien für alle 32 Reihen und ein Quellenmanifest. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
 
 ```sh
 node scripts/import-archive.mjs http://localhost:5173

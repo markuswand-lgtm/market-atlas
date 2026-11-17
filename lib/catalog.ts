@@ -1,4 +1,6 @@
 export type Asset = { id:string; name:string; symbol:string; group:string; unit:string; color:string; provider:'yahoo'|'fred'|'ecb'; series:string; frequency:'daily'|'monthly'; note:string; sourceName:string; link:string; scale?:number; };
+// These provider series were discontinued in 2023; retain them as historical archives.
+export const ARCHIVED_IDS=['gbp-money','jpy-money'];
 export const ASSETS: Asset[] = [
  {id:'sp500',name:'S&P 500',symbol:'SPX',group:'Aktienindizes',unit:'Punkte',color:'#96b7ff',provider:'yahoo',series:'^GSPC',frequency:'daily',sourceName:'Yahoo Finance',link:'https://finance.yahoo.com/quote/%5EGSPC/history/',note:'Kursindex ohne Dividenden. Frühe Werte enthalten die historische Vorgängerreihe des Anbieters.'},
  {id:'dow',name:'Dow Jones',symbol:'DJI',group:'Aktienindizes',unit:'Punkte',color:'#c3a4ff',provider:'yahoo',series:'^DJI',frequency:'daily',sourceName:'Yahoo Finance',link:'https://finance.yahoo.com/quote/%5EDJI/history/',note:'Kursindex. Umfang entspricht der abrufbaren Anbieterhistorie, nicht zwingend dem gesamten Indexbestehen.'},
@@ -26,4 +28,3 @@ export const ASSETS: Asset[] = [
  {id:'cpi-eu',name:'Euroraum · Verbraucherpreise',symbol:'HVPI',group:'Preisindizes',unit:'Index',color:'#b2a3df',provider:'ecb',series:'HICP/M.U2.N.000000.4D0.INX',frequency:'monthly',sourceName:'Eurostat / EZB',link:'https://data.ecb.europa.eu/data/datasets/HICP/HICP.M.U2.N.000000.4D0.INX',note:'HVPI Gesamtindex, nicht saisonbereinigt, Euroraum mit wechselnder Zusammensetzung. 2025=100; neuer HICP-Datenfluss ab 2026 mit zurückgerechneter Historie.'},
 ];
 export function sourceUrl(a:Asset, now=Date.now()) { return a.provider==='yahoo' ? `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(a.series)}?period1=-2208988800&period2=${Math.floor(now/1000)}&interval=1d` : a.provider==='ecb' ? `https://data-api.ecb.europa.eu/service/data/${a.series}?format=csvdata` : `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${a.series}`; }
-

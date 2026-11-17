@@ -1,6 +1,6 @@
 # Automatische Aktualisierung
 
-Die mit der privaten Site verknüpfte Cloud-Aufgabe prüft alle Katalogreihen täglich um 07:00 Uhr in Europe/Berlin, auch bei geschlossenem Browser. Quellen: Yahoo Finance, FRED und EZB gemäß `lib/catalog.ts`. Verfügbarkeit und Veröffentlichungsrhythmus der Quellen begrenzen die Aktualität; GBP/JPY sind historische Archivserien.
+Die mit der privaten Site verknüpfte Cloud-Aufgabe prüft alle 22 aktiven Katalogreihen täglich um 07:00 Uhr in Europe/Berlin, auch bei geschlossenem Browser. Quellen: Yahoo Finance, FRED und EZB gemäß `lib/catalog.ts`. Verfügbarkeit und Veröffentlichungsrhythmus der Quellen begrenzen die Aktualität. Die 2023 eingestellten GBP/JPY-Serien bleiben historische Archive und sind von täglichen Abrufen ausgenommen; ihre FRED-Endpunkte lieferten beim Produktionstest HTTP 520. Ein manueller Abruf bleibt möglich.
 
 ## Unbeaufsichtigter Schreibweg
 

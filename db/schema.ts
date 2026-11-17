@@ -1,0 +1,4 @@
+import {sqliteTable,text,real,integer,primaryKey} from 'drizzle-orm/sqlite-core';
+export const series=sqliteTable('series',{id:text('id').primaryKey(),sourceUrl:text('source_url').notNull(),retrievedAt:text('retrieved_at').notNull(),status:text('status').notNull().default('loading'),count:integer('count').notNull().default(0),firstDate:text('first_date'),lastDate:text('last_date'),jobId:text('job_id').notNull()});
+export const observations=sqliteTable('observations',{seriesId:text('series_id').notNull().references(()=>series.id),date:text('date').notNull(),value:real('value').notNull()},t=>[primaryKey({columns:[t.seriesId,t.date]})]);
+export const importRuns=sqliteTable('import_runs',{id:text('id').primaryKey(),seriesId:text('series_id').notNull(),startedAt:text('started_at').notNull(),finishedAt:text('finished_at'),status:text('status').notNull(),rowCount:integer('row_count').notNull().default(0),sourceUrl:text('source_url').notNull()});

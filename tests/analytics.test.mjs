@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {cleanPoints,deflate,metrics,regression,backtest,downsample} from '../lib/analytics.ts';
+import {parseSource} from '../lib/providers.ts';
+import {ASSETS} from '../lib/catalog.ts';
+const p=(date,value)=>({date,value});
+test('CPI uses exact observation month and explicit base; no extrapolation',()=>{const actual=deflate([p('2020-01-15',100),p('2020-02-12',110),p('2020-03-01',120)],[p('2020-01-01',100),p('2020-02-01',110)],'2020-02');assert.deepEqual(actual,[p('2020-01-15',110),p('2020-02-12',110)]);assert.deepEqual(deflate(actual,[],'2020-01'),[]);});
+test('Drawdown captures peak-to-trough; CAGR uses elapsed calendar time',()=>{const m=metrics([p('2020-01-01',100),p('2020-06-01',200),p('2020-09-01',50),p('2021-01-01',100)]);assert.equal(m.drawdown,-.75);assert.equal(m.total,0);assert.equal(m.cagr,0);});
+test('Negative oil prices preserved, percentage metrics unavailable',()=>{assert.equal(cleanPoints([p('2020-04-20',-36.98)])[0].value,-36.98);assert.equal(metrics([p('2020-04-20',-36.98),p('2020-04-21',10)]).total,null);});
+test('Duplicate dates are idempotent and invalid calendar dates excluded',()=>{assert.deepEqual(cleanPoints([p('2020-02-30',10),p('2020-01-01',1),p('2020-01-01',2)]),[p('2020-01-01',2)]);});
+test('Regression recovers exact line and constant series',()=>{const r=regression([p('2020-01-01',10),p('2020-01-02',20),p('2020-01-03',30)]);assert.equal(r.r2,1);assert.equal(r.points[1].value,30);assert.equal(regression([p('2020-01-01',0),p('2021-01-01',1)],true),null);});
+const history=Array.from({length:16},(_,i)=>p(new Date(Date.UTC(2020,0,i+1)).toISOString().slice(0,10),100+i));
+test('Backtest uses next-close execution and charges entry and liquidation',()=>{const r=backtest(history,'2020-01-06','2020-01-16',2,4,10,1000);assert.equal(r.entries,1);assert.equal(r.turns,2);assert.ok(Math.abs(r.strategy.at(-1).value-1000*.999*.999*115/105)<1e-8);assert.ok(Math.abs(r.benchmark.at(-1).value-r.strategy.at(-1).value)<1e-8);});
+test('Future price changes cannot change already realised strategy equity',()=>{const changed=history.map((v,i)=>({...v,value:i>=12?v.value*4:v.value}));const a=backtest(history,'2020-01-06','2020-01-16',2,4,0),b=backtest(changed,'2020-01-06','2020-01-16',2,4,0);assert.deepEqual(a.strategy.slice(0,7),b.strategy.slice(0,7));});
+test('Invalid windows and unavailable warmup rejected',()=>{assert.throws(()=>backtest(history,'2020-01-01','2020-01-16',2,4,10),/Aufwärm/);assert.throws(()=>backtest(history,'2020-01-06','2020-01-16',4,2,10),/Parameter/);});
+test('FRED missing values do not turn into zero and scaling is explicit',()=>{const a=ASSETS.find(x=>x.id==='gbp-money');assert.deepEqual(parseSource(a,'observation_date,MABMM301GBM189S\n2020-01-01,1000000000\n2020-02-01,.\n2020-03-01,\n'),[p('2020-01-01',1)]);});
+test('ECB CSV reads named columns including quoted commas',()=>{const a=ASSETS.find(x=>x.id==='eur-money');assert.deepEqual(parseSource(a,'KEY,TIME_PERIOD,OBS_VALUE,NOTE\nx,2020-01,1000,"a,b"\n'),[p('2020-01-01',1)]);});
+test('Yahoo max-range monthly substitution is rejected',()=>{assert.throws(()=>parseSource(ASSETS[0],JSON.stringify({chart:{result:[{meta:{dataGranularity:'3mo'}}]}})),/Tageshistorie/);});
+test('Chart reduction retains extrema and endpoints',()=>{const rows=Array.from({length:3000},(_,i)=>p(new Date(Date.UTC(2000,0,i+1)).toISOString().slice(0,10),i===1501?-100:i===800?10000:100));const slim=downsample(rows,200);assert.equal(slim[0],rows[0]);assert.equal(slim.at(-1),rows.at(-1));assert.ok(slim.some(p=>p.value===-100));assert.ok(slim.some(p=>p.value===10000));});
+

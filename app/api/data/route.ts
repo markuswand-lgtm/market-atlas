@@ -1,0 +1,4 @@
+import {env} from 'cloudflare:workers';
+import {ASSETS} from '../../../lib/catalog';
+export async function GET(req:Request){try{const db=env.DB;if(!db)throw new Error('Datenbankbindung fehlt.');const id=new URL(req.url).searchParams.get('id');if(id){if(!ASSETS.some(a=>a.id===id))return Response.json({error:'Unbekannte Reihe.'},{status:400});const rows=await db.prepare("SELECT o.date,o.value FROM observations o JOIN series s ON s.id=o.series_id WHERE o.series_id=? AND s.status='ready' ORDER BY o.date").bind(id).all();return Response.json({rows:rows.results},{headers:{'Cache-Control':'no-store'}});}const result=await db.prepare('SELECT * FROM series ORDER BY id').all();return Response.json({series:result.results},{headers:{'Cache-Control':'no-store'}});}catch(e){console.error(e);return Response.json({error:'Datenbank nicht verfügbar. Bitte Einrichtung und Migration prüfen.'},{status:503});}}
+

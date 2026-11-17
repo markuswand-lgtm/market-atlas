@@ -2,24 +2,25 @@
 import {useId,useMemo,useState} from 'react';
 import {downsample,type Point} from '../lib/analytics';
 import {CYCLES,CYCLE_POINTS} from '../lib/cycles';
+import {timeDomain} from '../lib/display';
 
 export type ChartLine={id:string;name:string;color:string;points:Point[];dashed?:boolean};
 const fmt=(n:number)=>new Intl.NumberFormat('de-DE',{notation:Math.abs(n)>99999?'compact':'standard',maximumFractionDigits:1}).format(n);
-type Props={lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean};
+type Props={lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean;from?:string;to?:string};
 
-export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B','C'],label='Wert',future=false}:Props){
+export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B','C'],label='Wert',future=false,from,to}:Props){
  const uid=useId().replace(/:/g,'');
  const [hover,setHover]=useState<number|null>(null);
  const model=useMemo(()=>{
-  const valid=lines.map(l=>({...l,points:downsample(l.points.filter(p=>!log||p.value>0))}));
+  const valid=lines.map(l=>({...l,points:downsample(l.points.filter(p=>(!log||p.value>0)&&(!from||p.date>=from)&&(!to||p.date<=to)))}));
   const all=valid.flatMap(l=>l.points);
   if(!all.length)return null;
-  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  for(const p of all){const x=Date.parse(p.date),y=log?Math.log(p.value):p.value;minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
-  if(future&&cycles)maxX=Math.max(maxX,Date.UTC(2060,0,1));
+  let minY=Infinity,maxY=-Infinity;
+  for(const p of all){const y=log?Math.log(p.value):p.value;minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
+  const {minX,maxX}=timeDomain(all,from,to,future&&cycles);
   const pad=(maxY-minY)*.12||1;minY-=pad;maxY+=pad;
   return {valid,minX,maxX:maxX===minX?maxX+86400000:maxX,minY,maxY};
- },[lines,log,cycles,future]);
+ },[lines,log,cycles,future,from,to]);
 
  if(!model)return <div className="chart-empty"><span className="empty-icon">⌁</span><h3>Noch keine Daten im gewählten Zeitraum</h3><p>Historien herunterladen oder Zeitraum und Auswahl anpassen.</p></div>;
  const {minX,maxX,minY,maxY,valid}=model;
@@ -30,7 +31,7 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
  const cycleY=(kind:string)=>bandTop+(kind==='B'?34:83);
  const path=(p:Point[])=>p.map((v,i)=>`${i?'L':'M'}${x(v.date).toFixed(2)},${y(v.value).toFixed(2)}`).join(' ');
  const hoverDate=hover===null?null:minX+hover*(maxX-minX);
- const nearest=hoverDate===null?[]:valid.filter(l=>!l.dashed&&l.points.length).map(l=>{
+ const nearest=hoverDate===null?[]:valid.filter(l=>!l.dashed&&l.points.length&&hoverDate>=Date.parse(l.points[0].date)&&hoverDate<=Date.parse(l.points.at(-1)!.date)).map(l=>{
   let near=l.points[0];for(const p of l.points)if(Math.abs(Date.parse(p.date)-hoverDate)<Math.abs(Date.parse(near.date)-hoverDate))near=p;
   return {...l,point:near};
  });
@@ -68,7 +69,7 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
     </g>
    </g>}
   </svg>
-  {hoverDate!==null&&<div className="chart-tooltip"><b>{new Date(hoverDate).toLocaleDateString('de-DE')}</b>{nearest.map(l=><div key={l.id}><span style={{color:l.color}}>● {l.name}</span><strong>{fmt(l.point.value)}</strong><small>{l.point.date}</small></div>)}</div>}
+  {hoverDate!==null&&<div className="chart-tooltip"><b>{new Date(hoverDate).toLocaleDateString('de-DE')}</b>{!nearest.length&&<p>Keine Beobachtung in diesem Zeitraum</p>}{nearest.map(l=><div key={l.id}><span style={{color:l.color}}>● {l.name}</span><strong>{fmt(l.point.value)}</strong><small>{l.point.date}</small></div>)}</div>}
   <div className="chart-legend">{lines.map(l=><span key={l.id}><i style={{background:l.color}}/>{l.name}{l.dashed?' · Trend':''}</span>)}{cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).map(([k,c])=><span key={k}><i style={{background:c.color}}/>{k} · {c.label}</span>)}</div>
  </div>;
 }

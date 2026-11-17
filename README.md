@@ -17,6 +17,9 @@ Deutschsprachige Browser-App für historische Multi-Asset-Analyse, Geldmengen, I
 - Inflationsknopf: US-CPI oder Euro-HVPI, exakte Monatszuordnung und sichtbarer Basismonat.
 - Digitalisierte Jahresangaben des bereitgestellten Zyklusbilds, optional im Kursdiagramm; Originalbild und Unstimmigkeiten bleiben nachvollziehbar.
 - SMA-Long/Cash-Strategie mit Folgetagsausführung, Handelskosten und Buy-&-Hold-Vergleich.
+- Automatische tägliche Quellenprüfung um 07:00 Uhr (Europe/Berlin), auch bei geschlossenem Browser; Details: [Automatische Aktualisierung](docs/automatic-updates.md).
+- MAX-Zeitachse ab 1890, mit sichtbaren Datenlücken vor Beginn der jeweiligen Quelle. Basis 100 erhält standardmäßig jede Historie; gemeinsamer Start ist optional.
+- Strategielabor folgt der Asset-Auswahl und berechnet gestartete Tests bei Änderungen an Parametern, Zeiträumen und Daten neu. Fehlende Aufwärmhistorie verschiebt den tatsächlichen Testbeginn sichtbar.
 
 ## Lokal starten
 

@@ -33,9 +33,9 @@ export default function Atlas(){
  const primary=chartLines[0],stats=metrics(primary?.points||[]),smaAsset=ASSETS.find(a=>a.id===selected[0]),canSma=smaAsset?.frequency==='daily',validWindows=validSmaPair(fast,slow);
  const smaLines:ChartLine[]=useMemo(()=>{
   if(!canSma||!validWindows||dataLoading||dataError)return [];
-  const asset=ASSETS.find(a=>a.id===selected[0])!,reference=(prepared[0]?.points||[]).filter(p=>!normal||!shared||p.date>=overlap);
+  const asset=ASSETS.find(a=>a.id===selected[0])!,start=chartLines[0]?.points[0]?.date,reference=start?(prepared[0]?.points||[]).filter(p=>p.date>=start):[];
   return [{show:showFast,window:fast,kind:'fast',label:'Schneller',color:'#59d8d0',dashPattern:'6 3'},{show:showSlow,window:slow,kind:'slow',label:'Langsamer',color:'#f0b56c',dashPattern:'2 4'}].filter(s=>s.show).map(s=>({id:`${asset.id}-sma-${s.kind}-${s.window}`,name:`${asset.name} · ${s.label} SMA ${s.window}`,color:s.color,dashPattern:s.dashPattern,frequency:asset.frequency,points:smaOverlay(data[asset.id]||[],s.window,reference,normal,real?data[cpi]||[]:undefined,baseMonth)}));
- },[canSma,validWindows,dataLoading,dataError,selected,prepared,normal,shared,overlap,showFast,showSlow,fast,slow,data,real,cpi,baseMonth]);
+ },[canSma,validWindows,dataLoading,dataError,selected,prepared,chartLines,normal,showFast,showSlow,fast,slow,data,real,cpi,baseMonth]);
  const fit=trend&&primary?regression(primary.points.filter(p=>p.date>=trendFrom&&p.date<=trendTo),log):null;const lines=fit?[...chartLines,...smaLines,{id:'trend',name:primary.name,color:'#e7d6a8',points:fit.points,dashed:true}]:[...chartLines,...smaLines];
  const nonPositive=lines.some(l=>l.points.some(p=>p.value<=0));const totalRows=meta.reduce((s,m)=>s+m.count,0);
  function toggle(id:string){setSelected(old=>old.includes(id)?(old.length===1?old:old.filter(x=>x!==id)):[...old,id]);}

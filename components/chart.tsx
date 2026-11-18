@@ -3,12 +3,13 @@ import {useId,useMemo,useState} from 'react';
 import {downsample,type Point} from '../lib/analytics';
 import {CYCLES,CYCLE_POINTS} from '../lib/cycles';
 import {timeDomain} from '../lib/display';
+import {valueAxis,timeTicks} from '../lib/chart-axis';
 
 export type ChartLine={id:string;name:string;color:string;points:Point[];dashed?:boolean;dashPattern?:string;gapDays?:number;frequency?:'daily'|'monthly'|'annual'};
-const fmt=(n:number)=>new Intl.NumberFormat('de-DE',{notation:Math.abs(n)>99999?'compact':'standard',maximumFractionDigits:1}).format(n);
-type Props={lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean;from?:string;to?:string};
+const fmt=(n:number)=>new Intl.NumberFormat('de-DE',{notation:Math.abs(n)>99999?'compact':'standard',maximumSignificantDigits:5}).format(n);
+type Props={lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean;from?:string;to?:string;baseline?:number};
 
-export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B','C'],label='Wert',future=false,from,to}:Props){
+export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B','C'],label='Wert',future=false,from,to,baseline}:Props){
  const uid=useId().replace(/:/g,'');
  const [hover,setHover]=useState<number|null>(null);
  const model=useMemo(()=>{
@@ -16,14 +17,14 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
   const all=valid.flatMap(l=>l.points);
   if(!all.length)return null;
   let minY=Infinity,maxY=-Infinity;
-  for(const p of all){const y=log?Math.log(p.value):p.value;minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
+  for(const p of all){const y=p.value;minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
   const {minX,maxX}=timeDomain(all,from,to,future&&cycles);
-  const pad=(maxY-minY)*.12||1;minY-=pad;maxY+=pad;
-  return {valid,minX,maxX:maxX===minX?maxX+86400000:maxX,minY,maxY};
- },[lines,log,cycles,future,from,to]);
+  const axis=valueAxis(minY,maxY,log,baseline);minY=log?Math.log(axis.min):axis.min;maxY=log?Math.log(axis.max):axis.max;
+  return {valid,minX,maxX:maxX===minX?maxX+86400000:maxX,minY,maxY,ticks:axis.ticks};
+ },[lines,log,cycles,future,from,to,baseline]);
 
  if(!model)return <div className="chart-empty"><span className="empty-icon">⌁</span><h3>Noch keine Daten im gewählten Zeitraum</h3><p>Historien herunterladen oder Zeitraum und Auswahl anpassen.</p></div>;
- const {minX,maxX,minY,maxY,valid}=model;
+ const {minX,maxX,minY,maxY,valid,ticks}=model;
  const W=1120,H=cycles?500:380,L=64,R=25,T=24,B=36,pw=W-L-R;
  const priceBottom=H-B-(cycles?122:0),ph=priceBottom-T,bandTop=priceBottom+20;
  const x=(date:string|number)=>L+((typeof date==='string'?Date.parse(date):date)-minX)/(maxX-minX)*pw;
@@ -47,8 +48,9 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
     <clipPath id={`${uid}-plot`}><rect x={L} y={T} width={pw} height={ph}/></clipPath>
     <clipPath id={`${uid}-cycle`}><rect x={L} y={bandTop-2} width={pw} height={104}/></clipPath>
    </defs>
-   {[0,1,2,3,4].map(i=>{const yy=T+i/4*ph,v=maxY-i/4*(maxY-minY);return <g key={i}><line x1={L} x2={W-R} y1={yy} y2={yy} stroke="#30363e" strokeDasharray="2 5"/><text x={L-12} y={yy+4} textAnchor="end" fill="#7f8998" fontSize="11">{fmt(log?Math.exp(v):v)}</text></g>})}
-   {[0,1,2,3,4,5].map(i=>{const d=minX+i/5*(maxX-minX);return <text key={i} x={x(d)} y={H-9} textAnchor="middle" fill="#7f8998" fontSize="11">{new Date(d).toLocaleDateString('de-DE',{year:'numeric',...(maxX-minX<86400000*800?{month:'short'}:{})})}</text>})}
+   {ticks.filter(v=>baseline===undefined||Math.abs(v-baseline)>1e-9).map(v=><g key={v}><line x1={L} x2={W-R} y1={y(v)} y2={y(v)} stroke="#35404f" strokeDasharray="3 5"/><text x={L-12} y={y(v)+4} textAnchor="end" fill="#929eaf" fontSize="11">{fmt(v)}</text></g>)}
+   {timeTicks(minX,maxX).map(t=><g key={t.value}><line x1={x(t.value)} x2={x(t.value)} y1={T} y2={priceBottom} stroke="#303a48" strokeDasharray="3 5"/><text x={x(t.value)} y={H-9} textAnchor="middle" fill="#929eaf" fontSize="11">{t.label}</text></g>)}
+   {baseline!==undefined&&<g aria-label={`Referenzlinie ${baseline}`}><line x1={L} x2={W-R} y1={y(baseline)} y2={y(baseline)} stroke="#c4cfdd" strokeWidth="2" vectorEffect="non-scaling-stroke"/><text x={L-12} y={y(baseline)+4} textAnchor="end" fill="#e5edf7" fontSize="11" fontWeight="700">{fmt(baseline)}{baseline===100?' %':''}</text></g>}
    <g clipPath={`url(#${uid}-plot)`}>
     {cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).flatMap(([key,c])=>c.years.filter(inRange).map(year=><g key={`${key}-${year}`}><line x1={x(Date.UTC(year,0,1))} x2={x(Date.UTC(year,0,1))} y1={T} y2={priceBottom} stroke={c.color} strokeOpacity={key==='A'?.45:.18} strokeDasharray="4 6"/><text x={x(Date.UTC(year,0,1))+4} y={T+12+(['A','B','C'].indexOf(key)*14)} fontSize="10" fill={c.color}>{key} {year}</text></g>))}
     {valid[0]?.points.length>1&&valid[0].segments.length===1&&valid.length<3&&<path d={`${path(valid[0].points)} L${x(valid[0].points.at(-1)!.date)},${priceBottom} L${x(valid[0].points[0].date)},${priceBottom} Z`} fill={`url(#${uid}-fill)`}/>}

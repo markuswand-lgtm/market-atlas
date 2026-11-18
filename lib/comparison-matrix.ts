@@ -10,10 +10,28 @@ const DAY=86400000;
 export function monthIndex(date:string){return Number(date.slice(0,4))*12+Number(date.slice(5,7))-1;}
 export function monthStart(index:number){return `${Math.floor(index/12)}-${String(index%12+1).padStart(2,'0')}-01`;}
 export function monthEnd(index:number){return new Date(Date.UTC(Math.floor(index/12),index%12+1,0)).toISOString().slice(0,10);}
-export function effectiveInterval(frequencies:Interval[],requested:Interval|'auto'):Interval{
+export function effectiveInterval(frequencies:Interval[],requested:Interval|'auto',from?:string,to?:string):Interval{
+ const years=from&&to&&validDate(from)&&validDate(to)?(Date.parse(to)-Date.parse(from))/(DAY*365.2425):10;
+ const automatic:Interval=years<=3?'daily':years<=40?'monthly':'annual';
+ const desired=requested==='auto'?automatic:requested;
  if(frequencies.includes('annual'))return 'annual';
- if(frequencies.includes('monthly'))return requested==='annual'?'annual':'monthly';
- return requested==='auto'?'monthly':requested;
+ if(frequencies.includes('monthly'))return desired==='annual'?'annual':'monthly';
+ return desired;
+}
+
+// Relative strength uses a normalized ratio, not a currency conversion.
+export function relativePath(matched:Matched[]):Point[]{
+ if(matched.length<2||matched.some(p=>p.a<=0||p.b<=0))return [];
+ const base=matched[0];
+ const points=matched.map(p=>({date:p.date,value:100*(p.a/base.a)/(p.b/base.b)}));
+ return points.every(p=>Number.isFinite(p.value))?points:[];
+}
+export function extrema(points:Point[]){
+ if(!points.length)return {min:null,max:null};
+ return points.reduce<{min:Point|null;max:Point|null}>((r,p)=>({min:!r.min||p.value<r.min.value?p:r.min,max:!r.max||p.value>r.max.value?p:r.max}),{min:null,max:null});
+}
+export function assetComparisons(focus:string,ids:string[],sampled:Record<string,Sample[]>,from:string,to:string,interval:Interval){
+ return ids.filter(id=>id!==focus).map(id=>{const pair=comparePair(sampled[focus]||[],sampled[id]||[],from,to,interval),path=relativePath(pair.matched);return {id,pair,path,...extrema(path)};});
 }
 
 // Never upsample or carry values across missing periods. Annual drawing dates are

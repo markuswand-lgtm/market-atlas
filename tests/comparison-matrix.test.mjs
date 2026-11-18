@@ -56,3 +56,19 @@ test('Moving window retains length and clamps to available history; palettes kee
  assert.deepEqual(heatColor(1000,100,n,p),heatColor(100,100,n,p));
  assert.notDeepEqual(heatColor(null,1,n,p),heatColor(0,1,n,p));
 });
+import {relativePath,extrema,assetComparisons} from '../lib/comparison-matrix.ts';
+test('Automatic interval responds to window length and never upsamples slower sources',()=>{
+ assert.equal(effectiveInterval(['daily'],'auto','2020-01-01','2021-01-01'),'daily');
+ assert.equal(effectiveInterval(['daily'],'auto','2010-01-01','2021-01-01'),'monthly');
+ assert.equal(effectiveInterval(['daily'],'auto','1890-01-01','2021-01-01'),'annual');
+ assert.equal(effectiveInterval(['monthly'],'auto','2020-01-01','2021-01-01'),'monthly');
+});
+test('Per-asset rank and temporal ratio extrema retain common dates and earliest ties',()=>{
+ const a=sample([100,150,120,200]),b=sample([100,100,200,100]),c=sample([100,200,100,400]);
+ const result=assetComparisons('a',['a','b','c'],{a,b,c},'2020-01-01','2020-12-31','monthly');
+ assert.equal(result.length,2);assert.equal(result[0].pair.relative,100);assert.equal(result[1].pair.relative,-200);
+ assert.equal(result[0].min.value,60);assert.equal(result[0].min.date,'2020-03-31');assert.equal(result[0].max.value,200);
+ assert.equal(extrema([{date:'2020-01-01',value:100},{date:'2020-02-01',value:100}]).min.date,'2020-01-01');
+ assert.deepEqual(relativePath([{date:'2020-01-01',a:0,b:1},{date:'2020-02-01',a:1,b:2}]),[]);
+ const clipped=assetComparisons('a',['a','b'],{a,b},'2020-02-01','2020-03-31','monthly')[0];assert.equal(clipped.path[0].value,100);assert.equal(clipped.max.date,'2020-02-29');assert.equal(clipped.min.value,40);
+});

@@ -12,7 +12,8 @@ Die frühere private Sites-Version bleibt separat unter https://market-atlas-mw-
 
 ## Neue Erweiterungen
 
-- **Vergleichsmatrix:** alle 60 Reihen, verschiebbare Zeitfenster mit Wiedergabe, Korrelation und relative Veränderungen, anpassbare Farben, Paardiagramm und historische Verlaufsspur. [Bedienung und Berechnung](docs/comparison-matrix.md).
+- **Strategie- und Ordervergleich:** elf klassische und experimentelle Strategien, Market/Limit/Stop/Stop-Limit, optionale Schutz- und Rebalancingregeln, bis zu zwölf Varianten mit Kurven, Kennzahlen und Orderexport. [Bedienung und Modell](docs/strategy-lab.md).
+- **Vergleichsmatrix:** alle 60 Reihen, verschiebbare Zeitfenster mit Wiedergabe, Korrelation und relative Veränderungen, anpassbare Farben, Fokus-Asset mit relativen Minima/Maxima samt Datum, Quotientendiagramm mit frei wählbaren Quantilen und historische Verlaufsspur. [Bedienung und Berechnung](docs/comparison-matrix.md).
 - **Staatsverschuldung:** zwölf Länder und Weltaggregat, Schuldenquote sowie abgeleiteter USD-Betrag; separate USA-/Deutschland-Historien ab 1800/1880. [Quellen und Methodik](docs/government-debt.md).
 - **Offene Registrierung:** E-Mail/Passwort, Bestätigung, Zurücksetzen und Abmelden mit Firebase. Serverseitig geschützter Datenzugriff und kurzlebige GitHub-Zugangsdaten für den täglichen Datenjob. [Anmeldung und Zugriffsschutz](docs/login.md).
 

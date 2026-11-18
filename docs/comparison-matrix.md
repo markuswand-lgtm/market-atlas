@@ -7,7 +7,7 @@ Die neue Ansicht **Vergleichsmatrix** vergleicht alle 60 verfügbaren Reihen. Da
 - Kalenderdaten oder 1-/3-/5-/10-Jahres- und MAX-Presets wählen.
 - Den markierten Bereich der Zeitachse ziehen, den Schieberegler bewegen oder mit den Pfeilen vor/zurück gehen. Die Fensterlänge bleibt dabei in Kalendermonaten erhalten. Wiedergabe wandert monatlich bzw. bei Jahresdaten jährlich weiter und hält am Ende an; bei verborgenem Browser-Tab pausiert sie.
 - Zwischen **Gleichlauf** und **Stärkeunterschied** wechseln. Drei Farbpaletten, frei einstellbare Endfarben und Umkehrung der Palette sind verfügbar.
-- Eine Zelle wählen: Das Paardiagramm normiert beide Reihen am selben gemeinsamen Start auf 100, zeigt Veränderungen und die tatsächliche Datenabdeckung. Die farbige Verlaufsspur berechnet dieselbe Fensterlänge für bis zu ungefähr 90 frühere Fenster; ein Klick übernimmt das Fenster.
+- Eine Zelle wählen: Direkt darunter öffnet sich der Quotient Zeilenasset / Spaltenasset über die gesamte gemeinsame verfügbare Historie. Matrixzeitraum und Basis 100 sind umschaltbar. Zwei frei wählbare Quantile (0–100 %, Standard 10/90) lassen sich als horizontale Linien zuschalten. Die farbige Verlaufsspur berechnet dieselbe Fensterlänge für bis zu ungefähr 90 frühere Fenster; ein Klick übernimmt das Fenster.
 - CSV exportiert sämtliche gerichteten Paare mit Kennzahl, Häufigkeit, angefragtem und effektivem Zeitraum, Veränderungen, ausgelassenen Intervallen und Gründen für fehlende Ergebnisse.
 
 Die Matrix ist in beide Richtungen scrollbar. Zeilen-/Spaltenüberschriften bleiben sichtbar. Zellen sind per Tastatur fokussierbar und mit Pfeiltasten erreichbar. Zahlen, Vorzeichen und zugängliche Beschriftungen ergänzen die Farben; fehlende Werte erscheinen als „—“.
@@ -16,7 +16,7 @@ Die Matrix ist in beide Richtungen scrollbar. Zeilen-/Spaltenüberschriften blei
 
 Keine neuen Datenanbieter: Die Ansicht liest dieselben automatisch aktualisierten Quellen und denselben veröffentlichten Snapshot wie das Hauptdiagramm, einschließlich des vorbereiteten geschützten Firebase-Datenpfads. Maximal sechs parallele Downloads; ein fehlgeschlagener Download macht nur diese Reihe leer und wird mit einem Wiederholungsbutton gemeldet. Nach einer Datenaktualisierung werden alle Reihen erneut geladen.
 
-Die Standardfrequenz ist monatlich. Jede ausgewählte Jahresreihe erzwingt Jahresvergleich; eine Monatsreihe verhindert tägliche Vergleiche. Es wird nie hochgerechnet oder fortgeschrieben. Nur abgeschlossene Kalenderperioden bis zum gewählten Enddatum zählen.
+Automatisch wird bis drei Jahre täglich, bis 40 Jahre monatlich und darüber jährlich abgetastet; die langsamste Quellfrequenz bleibt die Untergrenze. Jede ausgewählte Jahresreihe erzwingt Jahresvergleich; eine Monatsreihe verhindert tägliche Vergleiche. Es wird nie hochgerechnet oder fortgeschrieben. Nur abgeschlossene Kalenderperioden bis zum gewählten Enddatum zählen.
 
 - Tagesquellen: letzter vorhandener Wert im Monat/Jahr, höchstens sieben Kalendertage vor Periodenende.
 - Monatsquellen: Quellenwert dieses Monats; bei Jahresauswahl Dezember. Ein Monatsmittel wird nicht zu einem Schlusskurs umgedeutet.
@@ -36,3 +36,19 @@ Veränderungen sind nominal, ohne Wechselkursumrechnung und Inflationsbereinigun
 ## Prüfung
 
 `tests/comparison-matrix.test.mjs` prüft variable/inverse/konstante Veränderungen, gemeinsame Endpunkte, Aktien-/Kryptokalender, Lücken, Jahreszeichnungsschlüssel, unvollständige Perioden, negative Werte, Matrixsymmetrie/Vorzeichen, Zeitfenstergrenzen und feste Farbskalen. Zusätzlich Browserprüfung von 18/60/ausgewählten Reihen, Zeitregler, Metrikwechsel, Farben, Paarauswahl und schmalem Layout.
+
+## Fokus-Asset und Extremwerte
+
+Unter dem Paarvergleich vergleicht **Ein Asset gegen alle** das gewählte Zeilenasset mit allen ausgewählten Partnern. Rangfolge und stärkster/schwächster Partner basieren auf dem Renditeabstand am Paarende. Das relative Verhältnis `100 × (A/A_Start) / (B/B_Start)` wird zusätzlich über die Zeit ausgewertet: Minimum und Maximum mit erstem Trefferdatum je Partner, sowie die Extrempartner insgesamt. CSV enthält Endabstand, Korrelation, exakte Paarzeiträume und Extremwerte.
+
+**Gleicher Start und Schluss für alle Partner** verwendet die ersten/letzten tatsächlich bei allen Reihen vorhandenen Perioden. Ohne gemeinsame Überlappung bleiben Ergebnisse leer. Standardmäßig bleiben Paarzeiträume unabhängig; unterschiedliche Startdaten sind sichtbar und schränken Rangvergleiche ein. Das Diagramm zeigt standardmäßig die Extrempartner, optional alle.
+
+## Quotient und Quantile
+
+Das beim Matrixklick geöffnete Diagramm zeigt `A_t / B_t`. Es nutzt die langsamere **native** Frequenz der beiden Reihen (bei zwei Tagesquellen täglich), unabhängig von der Matrix-Abtastung. Datenlücken werden nicht gefüllt; Quotienten mit Nenner null oder nichtendlichen Ergebnissen entfallen. Basis 100 benötigt positive Quotienten und verwendet den ersten gemeinsamen Wert als Basis. Fremde Währungen werden nicht konvertiert.
+
+Quantile verwenden alle gültigen Beobachtungen im angezeigten Verhältniszeitraum vor der grafischen Verdichtung, gleich gewichtet. Lineare Interpolation Typ 7: sortierte Werte, `h=(n−1)×p`, Interpolation zwischen `floor(h)` und `ceil(h)`, mit nullbasierten Indizes. 0 % = Minimum, 100 % = Maximum. [Definition in der R-Dokumentation](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/quantile.html). Quantile sind Verteilungskennwerte, keine Prognoseintervalle. Bei Änderungen an Paar, Zeitraum, Darstellung und Daten werden sie neu berechnet.
+
+## Diagrammachsen
+
+Alle Haupt-, Verhältnis- und Strategiediagramme verwenden glatte Y-Skalen, kalenderbezogene X-Markierungen und Hilfslinien beider Achsen. Basis-100-Diagramme heben die 100-%-Linie hervor. Rohwertdiagramme zeigen ihre ursprünglichen Einheiten. Logarithmische Achsen verwenden positive 1/2/5-Potenzen, bei engem Bereich passende Zwischenwerte.

@@ -16,6 +16,12 @@ test('Candidate selection ignores holdout prices and each winner reproduces its 
   assert.equal(r.gain,check.metrics.total);assert.equal(r.drawdown,check.metrics.drawdown);
   assert.equal(r.tested,grid(variants[i],DEFAULT_LAB).size);
  }
+ assert.deepEqual(first.benchmark.capital,runVariant(points,split,points.length-1,{id:'bh',name:'BH',strategy:'hold',order:'market',automation:false},{...DEFAULT_LAB,allocation:100}).curve);
+ for(const row of first.results){
+  assert.equal(row.capital[0].date,first.testFrom);
+  assert.equal(row.losses.at(-1).date,first.to);
+  assert.equal(Math.min(...row.losses.map(p=>p.value)),100*row.drawdown);
+ }
  assert.ok('slow' in first.results[0].settings);
  assert.ok('seasonStart' in first.results[1].settings);
 });

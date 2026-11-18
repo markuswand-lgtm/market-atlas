@@ -7,9 +7,9 @@ import {valueAxis,timeTicks} from '../lib/chart-axis';
 
 export type ChartLine={id:string;name:string;color:string;points:Point[];dashed?:boolean;dashPattern?:string;gapDays?:number;frequency?:'daily'|'monthly'|'annual'};
 const fmt=(n:number)=>new Intl.NumberFormat('de-DE',{notation:Math.abs(n)>99999?'compact':'standard',maximumSignificantDigits:5}).format(n);
-type Props={lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean;from?:string;to?:string;baseline?:number};
+type Props={showLegend?:boolean;lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean;from?:string;to?:string;baseline?:number};
 
-export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B','C'],label='Wert',future=false,from,to,baseline}:Props){
+export default function Chart({showLegend=true,lines,log=false,cycles=false,cycleKinds=['A','B','C'],label='Wert',future=false,from,to,baseline}:Props){
  const uid=useId().replace(/:/g,'');
  const [hover,setHover]=useState<number|null>(null);
  const model=useMemo(()=>{
@@ -72,6 +72,6 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
    </g>}
   </svg>
   {hoverDate!==null&&<div className="chart-tooltip"><b>{new Date(hoverDate).toLocaleDateString('de-DE')}</b>{!nearest.length&&<p>Keine Beobachtung in diesem Zeitraum</p>}{nearest.map(l=><div key={l.id}><span style={{color:l.color}}>● {l.name}</span><strong>{fmt(l.point.value)}</strong><small>{l.frequency==='annual'?`${l.point.date.slice(0,4)} · Jahreswert`:l.frequency==='monthly'?l.point.date.slice(0,7):l.point.date}</small></div>)}</div>}
-  <div className="chart-legend">{lines.map(l=><span key={l.id}><svg width="25" height="10" aria-hidden="true" style={{width:25,height:10}}><line x1="0" x2="25" y1="5" y2="5" stroke={l.color} strokeWidth="2" strokeDasharray={l.dashPattern||(l.dashed?'7 5':undefined)}/></svg>{l.name}{l.dashed?' · Trend':''}</span>)}{cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).map(([k,c])=><span key={k}><i style={{background:c.color}}/>{k} · {c.label}</span>)}</div>
+  {showLegend&&<div className="chart-legend">{lines.map(l=><span key={l.id}><svg width="25" height="10" aria-hidden="true" style={{width:25,height:10}}><line x1="0" x2="25" y1="5" y2="5" stroke={l.color} strokeWidth="2" strokeDasharray={l.dashPattern||(l.dashed?'7 5':undefined)}/></svg>{l.name}{l.dashed?' · Trend':''}</span>)}{cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).map(([k,c])=><span key={k}><i style={{background:c.color}}/>{k} · {c.label}</span>)}</div>}
  </div>;
 }

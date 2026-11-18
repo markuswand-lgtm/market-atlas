@@ -18,7 +18,15 @@ export function grid(v:Variant,o:LabOptions){
  return {keys,axes,size:axes.reduce((n,a)=>n*a.length,1)};
 }
 type Request={points:Point[];from:string;to:string;variants:Variant[];options:LabOptions;limit:number};
-export type Result={variant:Variant;settings:Partial<LabOptions>;training:number;gain:number;drawdown:number;trades:number;tested:number;size:number};
+function chartCurves(run:ReturnType<typeof runVariant>){
+ let peak=run.returnCurve[0].value;
+ const losses=run.returnCurve.map(({date,value})=>{
+  peak=Math.max(peak,value);
+  return {date,value:100*(value/peak-1)};
+ });
+ return {capital:run.curve,losses};
+}
+export type Result=ReturnType<typeof chartCurves>&{variant:Variant;settings:Partial<LabOptions>;training:number;gain:number;drawdown:number;trades:number;tested:number;size:number};
 export function batchSearch(input:Request,progress:(name:string,done:number,total:number)=>void=()=>{}){
  const {from,to,variants,options,limit}=input;validateLab(options);
  const p=cleanPoints(input.points.filter(x=>x.date<=to));
@@ -48,8 +56,9 @@ export function batchSearch(input:Request,progress:(name:string,done:number,tota
   if(!tested)throw Error('Keine gültige Kombination für '+v.name);
   const check=runVariant(p,split,end,v,winner);
   if(check.metrics?.total==null||check.metrics.drawdown==null)throw Error('Prüfkennzahlen fehlen.');
-  results.push({variant:v,settings:Object.fromEntries(keys.map(k=>[k,winner[k]])),training:best,gain:check.metrics.total,drawdown:check.metrics.drawdown,trades:check.trades.length,tested,size});
+  results.push({...chartCurves(check),variant:v,settings:Object.fromEntries(keys.map(k=>[k,winner[k]])),training:best,gain:check.metrics.total,drawdown:check.metrics.drawdown,trades:check.trades.length,tested,size});
  }
- return {from:p[start].date,trainingEnd:p[split-1].date,testFrom:p[split].date,to:p[end].date,results};
+ const benchmark=runVariant(p,split,end,{id:'benchmark',strategy:'hold',order:'market',name:'Buy & Hold',automation:false},{...options,allocation:100});
+ return {benchmark:chartCurves(benchmark),from:p[start].date,trainingEnd:p[split-1].date,testFrom:p[split].date,to:p[end].date,results};
 }
 export type BatchReport=ReturnType<typeof batchSearch>;

@@ -1,3 +1,4 @@
+import {buildDebtExtensions} from './build-debt-extensions.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -14,5 +15,6 @@ export async function buildHistoryModels(directory='work/data'){
   const {rows,...model}=result,entry={id:asset.id,name:asset.name,sourceName:asset.sourceName,sourceUrl:actual.sourceUrl,retrievedAt:new Date().toISOString(),frequency:asset.frequency,unit:asset.unit,first:rows[0].date,last:rows.at(-1).date,count:rows.length,note:asset.note,rows,model:{...model,actual:definition.actual,proxy:definition.proxy,actualRetrievedAt:actual.retrievedAt,proxyRetrievedAt:proxy.retrievedAt},provenance,...(actual.refreshError||proxy.refreshError?{refreshError:'Mindestens eine Modellquelle verwendet den letzten verfügbaren Stand.'}:{})};
   await fs.writeFile(path.join(directory,asset.id+'.json'),JSON.stringify(entry));console.log(`${asset.id}: ${entry.first} → ${entry.last}; Modell bis ${result.modeledTo}, Anbieter ab ${result.observedFrom}`);
  }
+ await buildDebtExtensions(directory);
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))await buildHistoryModels();

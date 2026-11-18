@@ -1,3 +1,4 @@
+import {monthlyPayment} from './contributions.ts';
 import {cleanPoints,metrics,sma,validDate,type Point} from './analytics.ts';
 export const STRATEGIES=[
  {id:'hold',name:'Buy & Hold',group:'Klassisch',description:'Einmal investieren und bis zum Testende halten.'},
@@ -15,16 +16,16 @@ export const STRATEGIES=[
 export type StrategyId=typeof STRATEGIES[number]['id'];
 export type OrderType='market'|'limit'|'stop'|'stop-limit';
 export type Variant={id:string;strategy:StrategyId;order:OrderType;name:string;automation:boolean};
-export type LabOptions={fast:number;slow:number;lookback:number;rsiLow:number;rsiHigh:number;band:number;gridStep:number;gridLevels:number;costBps:number;slippageBps:number;capital:number;allocation:number;offset:number;expiry:number;stopLoss:number;takeProfit:number;trailing:number;maxHold:number;cooldown:number;maxDrawdown:number;cadence:'daily'|'weekly'|'monthly';rebalance:boolean};
-export const DEFAULT_LAB:LabOptions={fast:50,slow:200,lookback:20,rsiLow:30,rsiHigh:70,band:2,gridStep:5,gridLevels:5,costBps:10,slippageBps:0,capital:10000,allocation:100,offset:1,expiry:5,stopLoss:0,takeProfit:0,trailing:0,maxHold:0,cooldown:0,maxDrawdown:0,cadence:'daily',rebalance:false};
+export type LabOptions={fast:number;slow:number;lookback:number;rsiLow:number;rsiHigh:number;band:number;gridStep:number;gridLevels:number;costBps:number;slippageBps:number;capital:number;monthly:number;allocation:number;offset:number;expiry:number;stopLoss:number;takeProfit:number;trailing:number;maxHold:number;cooldown:number;maxDrawdown:number;cadence:'daily'|'weekly'|'monthly';rebalance:boolean};
+export const DEFAULT_LAB:LabOptions={fast:50,slow:200,lookback:20,rsiLow:30,rsiHigh:70,band:2,gridStep:5,gridLevels:5,costBps:10,slippageBps:0,capital:10000,monthly:0,allocation:100,offset:1,expiry:5,stopLoss:0,takeProfit:0,trailing:0,maxHold:0,cooldown:0,maxDrawdown:0,cadence:'daily',rebalance:false};
 export type Trade={date:string;signalDate:string;side:'Kauf'|'Verkauf';price:number;quantity:number;fee:number;reason:string};
-export type LabResult={variant:Variant;curve:Point[];trades:Trade[];fees:number;turnover:number;exposure:number;cancelled:number;halted:boolean;metrics:ReturnType<typeof metrics>};
+export type LabResult={variant:Variant;curve:Point[];returnCurve:Point[];invested:Point[];paidIn:number;profit:number;trades:Trade[];fees:number;turnover:number;exposure:number;cancelled:number;halted:boolean;metrics:ReturnType<typeof metrics>};
 function ema(p:Point[],window:number){const initial=sma(p,window),out:(number|null)[]=p.map(()=>null);let previous:number|null=null;for(let i=0;i<p.length;i++){if(i===window-1)previous=initial[i];else if(i>=window)previous=p[i].value*(2/(window+1))+previous!*(1-2/(window+1));out[i]=previous;}return out;}
 export function wilderRsi(p:Point[],window:number){let gain=0,loss=0;return p.map((v,i)=>{if(!i)return null;const delta=v.value-p[i-1].value;if(i<=window){gain+=Math.max(0,delta)/window;loss+=Math.max(0,-delta)/window;}else {gain=(gain*(window-1)+Math.max(0,delta))/window;loss=(loss*(window-1)+Math.max(0,-delta))/window;}return i<window?null:gain===0&&loss===0?50:loss===0?100:100-100/(1+gain/loss);});}
 export function validateLab(o:LabOptions){
  const integer=(v:number,min:number,max:number)=>Number.isInteger(v)&&v>=min&&v<=max;
  if(!integer(o.fast,2,999)||!integer(o.slow,o.fast+1,1000)||!integer(o.lookback,2,1000)||!integer(o.gridLevels,1,20)||!integer(o.expiry,1,100)||!integer(o.maxHold,0,10000)||!integer(o.cooldown,0,1000))throw new Error('Fenster, Stufen und Gültigkeit müssen ganze Zahlen innerhalb der angezeigten Grenzen sein; schnell < langsam.');
- if(Object.values(o).some(v=>typeof v==='number'&&!Number.isFinite(v))||o.capital<=0||o.costBps<0||o.costBps>100||o.slippageBps<0||o.slippageBps>100||o.allocation<=0||o.allocation>100||o.offset<0||o.offset>50||o.band<=0||o.band>10||o.gridStep<=0||o.gridStep>50||o.rsiLow<0||o.rsiHigh>100||o.rsiLow>=o.rsiHigh||[o.stopLoss,o.trailing,o.maxDrawdown].some(v=>v<0||v>=100)||o.takeProfit<0||o.takeProfit>1000)throw new Error('Ungültige Parameter: Prozentwerte und Kosten müssen innerhalb der angezeigten Grenzen liegen.');
+ if(Object.values(o).some(v=>typeof v==='number'&&!Number.isFinite(v))||o.capital<=0||o.monthly<0||o.monthly>1e12||o.costBps<0||o.costBps>100||o.slippageBps<0||o.slippageBps>100||o.allocation<=0||o.allocation>100||o.offset<0||o.offset>50||o.band<=0||o.band>10||o.gridStep<=0||o.gridStep>50||o.rsiLow<0||o.rsiHigh>100||o.rsiLow>=o.rsiHigh||[o.stopLoss,o.trailing,o.maxDrawdown].some(v=>v<0||v>=100)||o.takeProfit<0||o.takeProfit>1000)throw new Error('Ungültige Parameter: Prozentwerte und Kosten müssen innerhalb der angezeigten Grenzen liegen.');
 }
 export function warmup(id:StrategyId,o:LabOptions){return ['sma','ema','contrarian'].includes(id)?o.slow:['hold','dca','seasonal'].includes(id)?0:o.lookback+1;}
 function cadenceKey(date:string,cadence:LabOptions['cadence']){if(cadence==='monthly')return date.slice(0,7);if(cadence==='weekly')return String(Math.floor((Date.parse(date)/86400000+3)/7));return date;}
@@ -33,10 +34,10 @@ function cadenceKey(date:string,cadence:LabOptions['cadence']){if(cadence==='mon
 // Stops observed at a close become market/limit orders for the NEXT close.
 export function runVariant(p:Point[],start:number,end:number,v:Variant,o:LabOptions):LabResult{
  const f=sma(p,o.fast),s=sma(p,o.slow),ef=ema(p,o.fast),es=ema(p,o.slow),mean=sma(p,o.lookback),rsi=wilderRsi(p,o.lookback);
- let cash=o.capital,qty=0,entry=0,high=0,entryIndex=0,lastExit=-Infinity,lastTarget=0,signalState=0,cancelled=0,halted=false,fees=0,turnover=0,exposure=0,peak=o.capital;
+ let cash=o.capital,qty=0,entry=0,high=0,entryIndex=0,lastExit=-Infinity,lastTarget=0,signalState=0,cancelled=0,halted=false,fees=0,turnover=0,exposure=0,peak=100,units=o.capital/100,paidIn=o.capital,contributionPending=false;
  type Order={target:number;type:OrderType;reference:number;created:number;signalDate:string;reason:string;triggered?:boolean};
  let pending:Order|null=null;
- const trades:Trade[]=[],curve:Point[]=[];
+ const trades:Trade[]=[],curve:Point[]=[],returnCurve:Point[]=[],invested:Point[]=[];
  const execute=(target:number,i:number,order:Order)=>{
   const mark=p[i].value,equity=cash+qty*mark,wanted=target*equity/mark,delta=wanted-qty;
   if(Math.abs(delta*mark)<Math.max(1e-8,equity*1e-8)){lastTarget=target;return;}
@@ -45,12 +46,15 @@ export function runVariant(p:Point[],start:number,end:number,v:Variant,o:LabOpti
   const amount=buying?Math.min(delta,cash/(price*(1+rate))):Math.min(-delta,qty),notional=amount*price,fee=notional*rate;
   if(amount<=1e-12)return;
   if(buying){if(qty===0){entryIndex=i;high=mark;}entry=(entry*qty+notional)/(qty+amount);qty+=amount;cash-=notional+fee;}else {cash+=notional-fee;qty-=amount;if(qty<1e-10){qty=0;entry=0;lastExit=i;}}
-  cash=Math.max(0,cash);fees+=fee;turnover+=notional;lastTarget=target;
+  cash=Math.max(0,cash);fees+=fee;turnover+=notional;lastTarget=target;contributionPending=false;
   trades.push({date:p[i].date,signalDate:order.signalDate,side:buying?'Kauf':'Verkauf',price,quantity:amount,fee,reason:order.reason});
  };
  for(let i=start;i<=end;i++){
   const price=p[i].value;
   if(i>start)exposure+=qty* p[i-1].value/(cash+qty*p[i-1].value);
+  const payment=i>start?monthlyPayment(p[i-1].date,p[i].date,o.monthly):0;
+  if(payment){const unitPrice=(cash+qty*price)/units;units+=payment/unitPrice;cash+=payment;paidIn+=payment;contributionPending=true;}
+  invested.push({date:p[i].date,value:paidIn});
   if(pending&&i>pending.created){
    if(i-pending.created>o.expiry&&pending.target>0&&!(pending.type==='stop'&&pending.triggered)){cancelled++;pending=null;}
    else {const order=pending,level=order.reference*(1+(order.type==='limit'?-1:1)*o.offset/100);let fill=order.type==='market'||order.target===0;
@@ -62,12 +66,12 @@ export function runVariant(p:Point[],start:number,end:number,v:Variant,o:LabOpti
     if(fill){execute(order.target,i,order);pending=null;}
    }
   }
-  let equity=cash+qty*price;peak=Math.max(peak,equity);high=qty?Math.max(high,price):0;
-  if(i===end){if(qty)execute(0,i,{target:0,type:'market',reference:price,created:i-1,signalDate:p[i].date,reason:'Schlussliquidation'});curve.push({date:p[i].date,value:cash});break;}
-  curve.push({date:p[i].date,value:equity});
+  let equity=cash+qty*price;peak=Math.max(peak,equity/units);high=qty?Math.max(high,price):0;
+  if(i===end){if(qty)execute(0,i,{target:0,type:'market',reference:price,created:i-1,signalDate:p[i].date,reason:'Schlussliquidation'});curve.push({date:p[i].date,value:cash});returnCurve.push({date:p[i].date,value:cash/units});break;}
+  curve.push({date:p[i].date,value:equity});returnCurve.push({date:p[i].date,value:equity/units});
   let exit='';
   if(v.automation){
-   if(o.maxDrawdown&&equity/peak-1<=-o.maxDrawdown/100){halted=true;exit='Kapital-Notbremse';}
+   if(o.maxDrawdown&&(equity/units)/peak-1<=-o.maxDrawdown/100){halted=true;exit='Kapital-Notbremse';}
    if(qty){if(o.stopLoss&&price/entry-1<=-o.stopLoss/100)exit=exit||'Stop-Loss';if(o.trailing&&price/high-1<=-o.trailing/100)exit=exit||'Trailing-Stop';if(o.takeProfit&&price/entry-1>=o.takeProfit/100)exit=exit||'Take-Profit';if(o.maxHold&&i-entryIndex>=o.maxHold)exit=exit||'Zeit-Ausstieg';}
   }
   if(exit){if(pending)cancelled++;pending=qty?{target:0,type:'market',reference:price,created:i,signalDate:p[i].date,reason:exit}:null;continue;}
@@ -92,13 +96,13 @@ export function runVariant(p:Point[],start:number,end:number,v:Variant,o:LabOpti
   if(v.automation&&i-lastExit<=o.cooldown)target=0;
   if(pending&&Math.abs(pending.target-target)>1e-9){pending=null;cancelled++;}
   if(pending)continue;
-  if(Math.abs(target-lastTarget)<1e-9&&!(v.automation&&o.rebalance&&qty>0))continue;
+  if(Math.abs(target-lastTarget)<1e-9&&!contributionPending&&!(v.automation&&o.rebalance&&qty>0))continue;
   if(target===0&&qty===0){lastTarget=0;continue;}
   const actual=qty*price/equity;
   if(Math.abs(target-actual)<.0001)continue;
   pending={target,type:target<actual?'market':v.order,reference:price,created:i,signalDate:p[i].date,reason:target<actual?'Strategie-Ausstieg / Reduktion':`Strategie-Einstieg · ${v.order}`};
  }
- return {variant:v,curve,trades,fees,turnover,exposure:exposure/Math.max(1,end-start),cancelled,halted,metrics:metrics(curve)};
+ return {variant:v,curve,returnCurve,invested,paidIn,profit:curve.at(-1)!.value-paidIn,trades,fees,turnover,exposure:exposure/Math.max(1,end-start),cancelled,halted,metrics:metrics(returnCurve)};
 }
 export function compareStrategies(rows:Point[],from:string,to:string,variants:Variant[],options:LabOptions){
  validateLab(options);if(!validDate(from)||!validDate(to)||from>to)throw new Error('Bitte einen gültigen Testzeitraum wählen.');

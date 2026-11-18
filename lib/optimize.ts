@@ -15,7 +15,7 @@ export function searchPairs(o:SearchOptions){
  return pairs;
 }
 /** Holdout data is never read during ranking. All candidates share the same dates. */
-export async function optimizeSma(points:Point[],from:string,to:string,cost:number,capital:number,options:SearchOptions,control:{signal?:AbortSignal;onProgress?:(done:number,total:number)=>void}={}):Promise<SearchResult>{
+export async function optimizeSma(points:Point[],from:string,to:string,cost:number,capital:number,options:SearchOptions,control:{signal?:AbortSignal;onProgress?:(done:number,total:number)=>void;monthly?:number}={}):Promise<SearchResult>{
  if(!validDate(from)||!validDate(to)||from>=to)throw new Error('Bitte einen gültigen Suchzeitraum wählen.');
  if(!Number.isInteger(options.trainingPercent)||options.trainingPercent<50||options.trainingPercent>90)throw new Error('Trainingsanteil muss zwischen 50 und 90 Prozent liegen.');
  if(!['cagr','balanced'].includes(options.objective))throw new Error('Unbekanntes Optimierungsziel.');
@@ -27,7 +27,7 @@ export async function optimizeSma(points:Point[],from:string,to:string,cost:numb
  const trainingHistory=points.slice(0,usable[cut-1].i+1),ranking:Candidate[]=[];
  for(let i=0;i<pairs.length;i++){
   if(control.signal?.aborted)throw new Error('Suche abgebrochen.');
-  const pair=pairs[i],r=backtest(trainingHistory,trainingFrom,trainingTo,pair.fast,pair.slow,cost,capital),m=r.metrics;
+  const pair=pairs[i],r=backtest(trainingHistory,trainingFrom,trainingTo,pair.fast,pair.slow,cost,capital,control.monthly||0),m=r.metrics;
   if(m?.cagr!=null&&m.total!=null&&m.drawdown!=null)ranking.push({...pair,cagr:m.cagr,total:m.total,drawdown:m.drawdown,entries:r.entries,score:options.objective==='cagr'?m.cagr:m.cagr-Math.abs(m.drawdown)});
   control.onProgress?.(i+1,pairs.length);
   if(i%8===7)await new Promise(resolve=>setTimeout(resolve,0));
@@ -35,5 +35,5 @@ export async function optimizeSma(points:Point[],from:string,to:string,cost:numb
  ranking.sort((a,b)=>b.score-a.score||Math.abs(a.drawdown)-Math.abs(b.drawdown)||a.fast-b.fast||a.slow-b.slow);
  if(!ranking.length)throw new Error('Keine auswertbare Kombination.');
  const best=ranking[0];
- return {best,ranking:ranking.slice(0,10),tested:pairs.length,trainingFrom,trainingTo,validationFrom,validationTo,options:{...options},training:backtest(trainingHistory,trainingFrom,trainingTo,best.fast,best.slow,cost,capital),validation:backtest(points.filter(p=>p.date<=validationTo),validationFrom,validationTo,best.fast,best.slow,cost,capital)};
+ return {best,ranking:ranking.slice(0,10),tested:pairs.length,trainingFrom,trainingTo,validationFrom,validationTo,options:{...options},training:backtest(trainingHistory,trainingFrom,trainingTo,best.fast,best.slow,cost,capital,control.monthly||0),validation:backtest(points.filter(p=>p.date<=validationTo),validationFrom,validationTo,best.fast,best.slow,cost,capital,control.monthly||0)};
 }

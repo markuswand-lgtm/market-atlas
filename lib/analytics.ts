@@ -1,3 +1,4 @@
+import {contributionBacktest} from './contributions.ts';
 export type Point={date:string;value:number};
 export const DAY=86400000;
 export function validDate(s:string){return /^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;}
@@ -7,15 +8,17 @@ export function regression(p:Point[],log=false){if(p.length<2||log&&p.some(x=>x.
 export function deflate(p:Point[],cpi:Point[],baseMonth:string){const byMonth=new Map(cpi.filter(v=>v.value>0).map(v=>[v.date.slice(0,7),v.value]));const base=byMonth.get(baseMonth);if(!base)return [];return p.flatMap(v=>{const c=byMonth.get(v.date.slice(0,7));return c?[{date:v.date,value:v.value*base/c}]:[];});}
 export function deflateAnnual(p:Point[],cpi:Point[],baseMonth:string){const byMonth=new Map(cpi.filter(v=>v.value>0).map(v=>[v.date.slice(0,7),v.value]));const base=byMonth.get(baseMonth);if(!base)return [];return p.flatMap(v=>{const year=v.date.slice(0,4),months=Array.from({length:12},(_,i)=>byMonth.get(`${year}-${String(i+1).padStart(2,'0')}`));if(months.some(v=>v===undefined))return [];const average=(months as number[]).reduce((s,n)=>s+n,0)/12;return [{date:v.date,value:v.value*base/average}];});}
 export function sma(p:Point[],window:number){let sum=0;return p.map((v,i)=>{sum+=v.value;if(i>=window)sum-=p[i-window].value;return i>=window-1?sum/window:null;});}
-export function backtest(p:Point[],from:string,to:string,fast:number,slow:number,costBps:number,capital=10000){
- if(!Number.isInteger(fast)||!Number.isInteger(slow)||fast<2||slow<=fast||slow>1000||!Number.isFinite(costBps)||costBps<0||costBps>100||!Number.isFinite(capital)||capital<=0)throw new Error('Parameter ungültig: 2 ≤ schnell < langsam ≤ 1000, Kosten 0–100 bp, Kapital > 0.');
+export function backtest(p:Point[],from:string,to:string,fast:number,slow:number,costBps:number,capital=10000,monthly=0){
+ if(!Number.isInteger(fast)||!Number.isInteger(slow)||fast<2||slow<=fast||slow>1000||!Number.isFinite(costBps)||costBps<0||costBps>100||!Number.isFinite(capital)||capital<=0||!Number.isFinite(monthly)||monthly<0||monthly>1e12)throw new Error('Parameter ungültig: 2 ≤ schnell < langsam ≤ 1000, Kosten 0–100 bp, Kapital > 0.');
  const indices=p.map((v,i)=>({v,i})).filter(({v})=>v.date>=from&&v.date<=to);if(indices.length<3)throw new Error('Zu wenige Beobachtungen im Testzeitraum.');
  if(p.slice(Math.max(0,indices[0].i-slow),indices.at(-1)!.i+1).some(x=>x.value<=0))throw new Error('Prozentbasierter Backtest mit Null- oder Negativpreisen im Test- oder Aufwärmzeitraum nicht definiert.');
  const f=sma(p,fast),s=sma(p,slow);const first=indices[0].i;if(first<slow)throw new Error(`Vor dem Startdatum werden mindestens ${slow} Beobachtungen für den Aufwärmzeitraum benötigt. Bitte späteren Start wählen.`);
+ if(monthly>0){const r=contributionBacktest(p,indices.map(v=>v.i),f,s,costBps/10000,capital,monthly);return {...r,metrics:metrics(r.strategyReturn),holdMetrics:metrics(r.benchmarkReturn)};}
  let equity=capital,hold=capital,position=0,entries=0,turns=0,exposed=0;const cost=costBps/10000;const strategy:Point[]=[{date:indices[0].v.date,value:capital}],benchmark:Point[]=[{date:indices[0].v.date,value:capital}];
  // Signal at t-1 close; execute at t close; earn t -> t+1. No same-close execution.
  for(let j=1;j<indices.length;j++){const i=indices[j].i,signal=i-2;const desired=f[signal]!==null&&s[signal]!==null&&f[signal]!>s[signal]!?1:0;if(desired!==position){equity*=1-cost;turns++;if(desired)entries++;}position=desired;exposed+=position;const ret=p[i].value/p[i-1].value-1;equity*=1+position*ret;hold*=(j===1?1-cost:1)*(1+ret);strategy.push({date:p[i].date,value:equity});benchmark.push({date:p[i].date,value:hold});}
  if(position){equity*=1-cost;turns++;strategy[strategy.length-1].value=equity;}hold*=1-cost;benchmark[benchmark.length-1].value=hold;
- return {strategy,benchmark,entries,turns,exposure:exposed/(indices.length-1),metrics:metrics(strategy),holdMetrics:metrics(benchmark)};
+ return {strategy,benchmark,strategyReturn:strategy.map(p=>({...p,value:p.value/capital*100})),benchmarkReturn:benchmark.map(p=>({...p,value:p.value/capital*100})),invested:strategy.map(p=>({date:p.date,value:capital})),paidIn:capital,profit:equity-capital,holdProfit:hold-capital,entries,turns,exposure:exposed/(indices.length-1),metrics:metrics(strategy),holdMetrics:metrics(benchmark)};
 }
 export function downsample(p:Point[],limit=1200){if(p.length<=limit)return p;const step=Math.ceil(p.length/(limit/2));const result=[p[0]];for(let i=1;i<p.length-1;i+=step){const slice=p.slice(i,Math.min(i+step,p.length-1));let min=slice[0],max=slice[0];for(const x of slice){if(x.value<min.value)min=x;if(x.value>max.value)max=x;}result.push(...(min.date<max.date?[min,max]:max.date<min.date?[max,min]:[min]));}result.push(p[p.length-1]);return result;}
+

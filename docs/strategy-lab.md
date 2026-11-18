@@ -42,3 +42,15 @@ Kapitalverläufe als Originalbetrag oder Basis 100, Endkapital, Gesamt-/Jahresre
 Intraday-Berührungen, reale Liquidität und Ausführungsreihenfolge fehlen bei Schlusskursdaten. Cash ist unverzinst; keine Steuern oder gesonderten Dividenden-/Rollkosten. Indizes sind nicht direkt handelbar. Historische Datenrevisionen bleiben ex post. Viele ausprobierte Varianten können historische Ergebnisse überanpassen; der Vergleich enthält keine automatische Gewinnerempfehlung. Für SMA bleibt die separate Trainings-/Prüfzeitraumsuche erhalten. [Indikatorgrundlagen: Fidelity](https://www.fidelity.com/learning-center/trading-investing/technical-analysis).
 
 Tests prüfen Gebühren und Slippage, verzögerte Ausführung, Limits, Stop-Limit-Nichtausführung, Schutzregeln, unveränderte Vergangenheit bei Änderung zukünftiger Preise und gemeinsame Vergleichszeiträume.
+
+## Monatliche Zusatzinvestition
+
+Neben dem einmaligen Startkapital kann eine monatliche Investitionssumme (0 = aus) eingestellt werden. Der Betrag gilt gemeinsam im Variantenvergleich, im separaten SMA-Test und bei der SMA-Optimierung. Währung ist die Modellwährung des Assets. Erste Einzahlung im Kalendermonat nach dem effektiven Testbeginn, danach am ersten vorhandenen Kurs jedes neuen Monats. Bei fehlenden ganzen Monaten wird die Summe beim nächsten Kurs gesammelt eingebucht. Alle Vergleichsvarianten einschließlich Referenz erhalten identische Cashflows.
+
+Im Variantenvergleich ist frisches Cash ab diesem Schluss verfügbar; Investition folgt den gewählten Strategie-, Signal- und Orderregeln, frühestens am nächsten Schluss, sofern keine bereits vorher platzierte Order an diesem Schluss ausgeführt wird. Im bestehenden SMA-Test gilt die feste Sparplananweisung: während einer Long-Phase Kauf zum Einzahlungsschluss, in Cash-Phasen zurückhalten. Signalwechsel bleiben nachgelagert wie zuvor. Gebühren gelten auch für Sparplankäufe; auf eine reine Einzahlung fällt keine Gebühr an.
+
+**Originalbetrag** zeigt tatsächliches Modellkapital inklusive Einzahlungen. Im Variantenvergleich ergänzt eine gestrichelte Linie das insgesamt eingezahlte Kapital. Tabellen zeigen Einzahlungssumme und absoluten Gewinn/Verlust (`Endkapital − Gesamteinzahlungen`). CSV enthält Einzahlungen und Renditeverläufe.
+
+**Basis 100**, Gesamt-/Jahresrendite, Rückgang und Kapital-Notbremse verwenden zeitgewichtete Renditen (TWR). Dazu wird vor jeder Einzahlung der Portfoliowert zum aktuellen Schluss durch die bisherige Anzahl rechnerischer Anteile geteilt. Die Einzahlung erzeugt neue Anteile zu diesem Wert; Gebühren senken anschließend den Anteilwert. Eine Einzahlung selbst ändert diesen Wert nicht. Dies misst die Strategieentwicklung, nicht die persönliche geldgewichtete Verzinsung aller Einzahlungen.
+
+Bei der SMA-Suche beginnen Training und Prüfung unabhängig jeweils mit Startkapital und eigenem monatlichen Zahlungsplan. Die Rangfolge verwendet einzahlungsbereinigte Renditen. Bei null Monatsbetrag bleibt der bestehende SMA-Test unverändert.

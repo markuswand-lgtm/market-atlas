@@ -14,6 +14,13 @@ test('Candidate selection ignores holdout prices and each winner reproduces its 
   assert.equal(r.training,second.results[i].training);
   const check=runVariant(points,split,points.length-1,variants[i],{...DEFAULT_LAB,...r.settings});
   assert.equal(r.gain,check.metrics.total);assert.equal(r.drawdown,check.metrics.drawdown);
+  for(const [rank,c] of r.ranking.entries()){
+   const direct=runVariant(points,split,points.length-1,variants[i],{...DEFAULT_LAB,...c.settings});
+   assert.deepEqual(c.settings,second.results[i].ranking[rank].settings);
+   assert.equal(c.holdout.capital.at(-1).value,direct.curve.at(-1).value);
+   assert.equal(c.holdout.gain,direct.metrics.total);
+   assert.equal(c.holdout.drawdown,direct.metrics.drawdown);
+  }
   assert.equal(r.tested,grid(variants[i],DEFAULT_LAB).size);
  }
  assert.deepEqual(first.benchmark.capital,runVariant(points,split,points.length-1,{id:'bh',name:'BH',strategy:'hold',order:'market',automation:false},{...DEFAULT_LAB,allocation:100}).curve);

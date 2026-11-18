@@ -1,4 +1,4 @@
-import {cleanPoints,type Point} from './analytics.ts';
+import {cleanPoints,downsample,type Point} from './analytics.ts';
 import {runVariant,validateLab,warmup,type Variant,type LabOptions} from './strategy-lab.ts';
 
 export const choices={
@@ -27,7 +27,13 @@ function chartCurves(run:ReturnType<typeof runVariant>){
  return {capital:run.curve,losses};
 }
 type Candidate={settings:Partial<LabOptions>;score:number;capital:number;gain:number;drawdown:number};
-export type Result=ReturnType<typeof chartCurves>&{ranking:Candidate[];variant:Variant;settings:Partial<LabOptions>;training:number;gain:number;drawdown:number;trades:number;tested:number;size:number};
+function evaluateHoldout(points:Point[],split:number,end:number,variant:Variant,options:LabOptions){
+ const run=runVariant(points,split,end,variant,options);
+ if(run.metrics?.total==null||run.metrics.drawdown==null)throw Error('Prüfkennzahlen fehlen.');
+ const curves=chartCurves(run);
+ return {capital:downsample(curves.capital),losses:downsample(curves.losses),gain:run.metrics.total,drawdown:run.metrics.drawdown,trades:run.trades.length};
+}
+export type Result=ReturnType<typeof chartCurves>&{ranking:(Candidate&{holdout:ReturnType<typeof evaluateHoldout>})[];variant:Variant;settings:Partial<LabOptions>;training:number;gain:number;drawdown:number;trades:number;tested:number;size:number};
 export function batchSearch(input:Request,progress:(name:string,done:number,total:number)=>void=()=>{}){
  const {from,to,variants,options,limit}=input;validateLab(options);
  const p=cleanPoints(input.points.filter(x=>x.date<=to));
@@ -43,7 +49,7 @@ export function batchSearch(input:Request,progress:(name:string,done:number,tota
   const gcd=(a:number,b:number):number=>b?gcd(b,a%b):a;
   while(gcd(stride,size)!==1)stride--;
   const ranking:Candidate[]=[];
-  let best=-Infinity,trainingReturn=0,bestDD=-Infinity,winner:LabOptions=options,tested=0,index=0;
+  let tested=0,index=0;
   for(let n=0;n<count;n++,index=(index+stride)%size){
    let code=index;
    const patch=Object.fromEntries(keys.map((key,k)=>{const axis=axes[k],value=axis[code%axis.length];code=Math.floor(code/axis.length);return [key,value];}));
@@ -60,15 +66,14 @@ export function batchSearch(input:Request,progress:(name:string,done:number,tota
     ranking.sort((a,b)=>b.score-a.score||b.drawdown-a.drawdown);
     if(ranking.length>5)ranking.pop();
    }
-   if(score>best||(score===best&&m.drawdown>bestDD)){best=score;trainingReturn=m.total;bestDD=m.drawdown;winner=trial;}
    if(n%16===0)progress(v.name,n+1,count);
   }
   if(!tested)throw Error('Keine gültige Kombination für '+v.name);
-  const check=runVariant(p,split,end,v,winner);
-  if(check.metrics?.total==null||check.metrics.drawdown==null)throw Error('Prüfkennzahlen fehlen.');
-  results.push({...chartCurves(check),ranking,variant:v,settings:Object.fromEntries(keys.map(k=>[k,winner[k]])),training:trainingReturn,gain:check.metrics.total,drawdown:check.metrics.drawdown,trades:check.trades.length,tested,size});
+  const evaluated=ranking.map(candidate=>({...candidate,holdout:evaluateHoldout(p,split,end,v,{...options,...candidate.settings})}));
+  const winner=evaluated[0];
+  results.push({...winner.holdout,ranking:evaluated,variant:v,settings:winner.settings,training:winner.gain,tested,size});
  }
  const benchmark=runVariant(p,split,end,{id:'benchmark',strategy:'hold',order:'market',name:'Buy & Hold',automation:false},{...options,allocation:100});
- return {benchmark:chartCurves(benchmark),from:p[start].date,trainingEnd:p[split-1].date,testFrom:p[split].date,to:p[end].date,results};
+ return {benchmark:{...chartCurves(benchmark),gain:benchmark.metrics?.total,drawdown:benchmark.metrics?.drawdown,trades:benchmark.trades.length},from:p[start].date,trainingEnd:p[split-1].date,testFrom:p[split].date,to:p[end].date,results};
 }
 export type BatchReport=ReturnType<typeof batchSearch>;

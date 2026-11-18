@@ -4,16 +4,16 @@ import {useState} from 'react';
 import {labels,type BatchReport} from '../lib/batch-search';
 import Chart from './chart';
 
-const colors=['#78c8ee','#f2b56f','#a6dcaa','#c4a2fb','#ee9baa','#65cec5','#e2d079','#869bea','#db93c5','#9bc0bc','#f09d85','#b6b7ff'];
+
 const modes={capital:'Kapital',losses:'Drawdown'} as const;
 type Mode=keyof typeof modes;
 function setting(value:unknown){
  return ({weekly:'wöchentlich',daily:'täglich',monthly:'monatlich',true:'ja',false:'nein'}[String(value)]??String(value));
 }
-export default function HoldoutCharts({report,currency}:{report:BatchReport;currency:string}){
+export default function HoldoutCharts({report,currency}:{report:Omit<BatchReport,'results'>&{results:(BatchReport['results'][number]&{color:string})[]};currency:string}){
  const [hidden,setHidden]=useState<Set<string>>(()=>new Set());
- const series=[{...report.benchmark,id:'reference',name:'Buy & Hold',color:'#cad3e2',dashPattern:'8 4',description:'Referenz · 100 % investiert · Market'},...report.results.map((r,i)=>({
-  capital:r.capital,losses:r.losses,id:'variant-'+r.variant.id,name:r.variant.name,color:colors[i%colors.length],dashPattern:undefined,
+ const series=[{...report.benchmark,id:'reference',name:'Buy & Hold',color:'#cad3e2',dashPattern:'8 4',description:'Referenz · 100 % investiert · Market'},...report.results.map(r=>({
+  capital:r.capital,losses:r.losses,id:'variant-'+r.variant.id,name:r.variant.name,color:r.color,dashPattern:undefined,
   description:[r.variant.order,...Object.entries(r.settings).map(([k,v])=>labels[k as keyof typeof labels]+' '+setting(v))].join(' · ')
  }))];
  function toggle(key:string){setHidden(old=>{const next=new Set(old);if(next.has(key))next.delete(key);else next.add(key);return next;});}

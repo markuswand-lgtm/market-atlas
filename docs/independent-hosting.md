@@ -1,5 +1,7 @@
 # Eigenständiges Hosting ohne ChatGPT
 
+**Live:** [Market Atlas öffnen](https://markuswand-lgtm.github.io/market-atlas/). Am 18. November 2026 ohne Zugangsdaten geprüft: Oberfläche, alle 32 Datenreihen mit 140.062 Beobachtungen und SQLite-Download sind erreichbar.
+
 Die Variante für GitHub Pages enthält dieselbe React-Oberfläche und dieselben Analysefunktionen wie die private Site. Sie benötigt weder ChatGPT-Anmeldung noch OpenAI-Schlüssel, Cloudflare-Konto, Datenbank-Passwort oder dauerhaft laufenden eigenen Rechner. Die Kursdaten sind über den veröffentlichten Link öffentlich abrufbar. Der Zugang ist kein privater Arbeitsbereich.
 
 ## Einmalige Aktivierung

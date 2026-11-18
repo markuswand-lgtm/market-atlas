@@ -2,11 +2,13 @@
 
 Deutschsprachige Browser-App für historische Multi-Asset-Analyse, Geldmengen, Inflationsbereinigung und nachvollziehbare Strategietests.
 
-**Browser-App:** https://market-atlas-mw-20261117.workspace-vo-6330.chatgpt.site (privater Zugriff)
+**Browser-App ohne Anmeldung:** https://markuswand-lgtm.github.io/market-atlas/
 
 **Quellcode:** https://github.com/markuswand-lgtm/market-atlas
 
-**Unabhängige Browser-Version ohne ChatGPT:** Für GitHub Pages vorbereitet. Einmalig unter **Settings → Pages → Source → GitHub Actions** aktivieren; erst nach erfolgreichem Deployment erreichbar unter https://markuswand-lgtm.github.io/market-atlas/. [Betrieb, Datenbank und tägliche Aktualisierung](docs/independent-hosting.md).
+Die App läuft auf GitHub Pages, unabhängig von ChatGPT, Codex und einem eigenen laufenden Rechner. Der Link ist öffentlich nutzbar und benötigt weder ein ChatGPT- noch ein GitHub-Konto. [Betrieb, Datenbank und tägliche Aktualisierung](docs/independent-hosting.md).
+
+Die frühere private Sites-Version bleibt separat unter https://market-atlas-mw-20261117.workspace-vo-6330.chatgpt.site verfügbar.
 
 ## Funktionen
 
@@ -57,7 +59,9 @@ Bei der Eingabeaufforderung `{}` und Enter für localhost eingeben. Für eine pr
 
 ## Architektur
 
-React + TypeScript + Vinext/Vite, Cloudflare Worker, D1/SQLite und Drizzle-Migrationen. Die persistente D1-Datenbank speichert Beobachtungen und Importläufe. Lokale und veröffentlichte Datenbanken sind unabhängig. Hosted Site bleibt owner-private; vor einer öffentlichen oder Mehrbenutzer-Bereitstellung sind anwendungsseitige Schreibrechte und Rate Limits erforderlich.
+Die öffentliche App verwendet React + TypeScript + Vite und GitHub Pages. GitHub Actions lädt täglich die Quelldaten und veröffentlicht versionierte JSON-Reihen sowie eine vollständige SQLite-Datenbank. Analyse und Strategietests laufen im Browser; Besucher können die zentrale Datenbank nicht überschreiben.
+
+Die frühere private Variante verwendet Vinext, Cloudflare Worker, D1/SQLite und Drizzle-Migrationen. Ihre D1-Datenbank speichert Beobachtungen und Importläufe unabhängig von der öffentlichen App und bleibt nur für den Eigentümer zugänglich.
 
 ```text
 app/                 Oberfläche und HTTP-API

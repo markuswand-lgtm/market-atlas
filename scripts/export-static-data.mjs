@@ -29,7 +29,7 @@ export async function exportStaticData(source='work/data',destination='dist-stat
   await fs.writeFile(path.join(destination,snapshot,entry.id+'.json'),JSON.stringify(entry));
  }db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}finally{db.close();}
  const failures=datasets.filter(d=>d.refreshError).map(d=>d.name);
- const result={snapshot,publishedAt:new Date().toISOString(),warning:failures.length?'Letzter Quellenabruf fehlgeschlagen für '+failures.join(', ')+'. Der letzte gespeicherte Stand bleibt verfügbar.':'',series:datasets.map(d=>({id:d.id,count:d.count,first_date:d.first,last_date:d.last,retrieved_at:d.retrievedAt,status:'ready',source_url:d.sourceUrl}))};
+ const result={snapshot,publishedAt:new Date().toISOString(),warning:failures.length?'Quellenabruf für '+failures.length+' Reihen fehlgeschlagen. Letzter erfolgreicher Stand bleibt verfügbar; Einzelheiten in der Datenbank.':'',series:datasets.map(d=>({id:d.id,count:d.count,first_date:d.first,last_date:d.last,retrieved_at:d.retrievedAt,status:'ready',source_url:d.sourceUrl,refresh_error:d.refreshError||''}))};
  await fs.writeFile(path.join(destination,'manifest.json'),JSON.stringify(result));
  return result;
 }

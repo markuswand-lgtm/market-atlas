@@ -16,3 +16,9 @@ Zusätzlich enthält die App zwei eigene [IMF HPDD-Archivserien](https://www.imf
 Schuldenquoten werden auch bei aktiviertem Inflationsknopf nicht mit einem Preisindex deflationiert. Nominale USD-Beträge können mit dem gewählten Preisindex bereinigt werden. Eine solche Bereinigung ist keine Wechselkurs- oder lokale Kaufkraftumrechnung. Basis 100 bleibt für Wachstumsvergleiche verfügbar, „Originaleinheiten“ zeigt die tatsächliche Quote bzw. den abgeleiteten Betrag.
 
 Quellenschnittstelle: [IMF DataMapper API](https://www.imf.org/external/datamapper/api/help). Fehlende Werte bleiben fehlend; der USD-Betrag wird nur bei gültiger Quote und positivem BIP desselben Jahres berechnet.
+
+## Automatischer Abruf und Ausweichquelle
+
+Die offizielle DataMapper-API v2 wird zuerst abgefragt. Falls der IMF Zugriffe aus dem GitHub-Rechenzentrum ablehnt, nutzt die App für Länderreihen die offizielle [Weiterveröffentlichung des IMF WEO durch World Bank Data360](https://data360.worldbank.org/en/api). Die Datenbank verlinkt dann die tatsächlich verwendete World-Bank-Quelle. Die WEO-Reihen können sich in Rundungspräzision und Veröffentlichungsstand unterscheiden; es werden keine verschieden abgegrenzten Schuldenkonzepte vermischt.
+
+Data360 liefert das nominale BIP in USD-Basiseinheiten, obwohl `UNIT_MULT=9` die Quellenskalierung dokumentiert. Für Mrd. USD wird ausdrücklich durch eine Milliarde geteilt. Der Import prüft Gebiet, Indikator, Jahresfrequenz, Einheit, neuesten Quellenstand und Vollständigkeit der Antwort. Für die Weltreihe bietet dieser Spiegel kein entsprechendes Aggregat. Bleibt deren IMF-Abruf gesperrt, wird der letzte erfolgreiche Stand behalten und in der App als nicht aktualisiert gekennzeichnet. Die bis 2015 abgeschlossenen HPDD-Reihen bleiben Archivserien.

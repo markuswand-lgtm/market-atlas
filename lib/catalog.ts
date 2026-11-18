@@ -1,7 +1,7 @@
 import {DEBT_ASSETS} from './debt.ts';
 export type Asset = { id:string; name:string; symbol:string; group:string; unit:string; color:string; provider:'yahoo'|'fred'|'ecb'|'shiller'|'eia-history'|'archive'|'imf'; series:string; frequency:'daily'|'monthly'|'annual'; note:string; sourceName:string; link:string; scale?:number; historical?:boolean; };
 // These provider series were discontinued in 2023; retain them as historical archives.
-export const ARCHIVED_IDS=['gbp-money','jpy-money','germany-stock','dow-early','dow-historical','gold-historical','silver-historical'];
+export const ARCHIVED_IDS=['gbp-money','jpy-money','germany-stock','dow-early','dow-historical','gold-historical','silver-historical','debt-usa-history','debt-deu-history'];
 export const frequencyLabel=(frequency:Asset['frequency'])=>frequency==='daily'?'Täglich':frequency==='monthly'?'Monatlich':'Jährlich';
 export const HISTORY_PRESET=['shiller-stock','gold-historical','silver-historical','oil-historical','germany-stock'];
 export const ASSETS: Asset[] = [

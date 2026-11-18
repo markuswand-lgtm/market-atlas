@@ -1,5 +1,7 @@
 # Automatische Aktualisierung
 
+Die unabhängige Variante verwendet `.github/workflows/pages.yml` und benötigt keine ChatGPT-Aufgabe oder Anmeldung. Siehe [eigenständiges Hosting](independent-hosting.md). Die nachfolgenden Angaben betreffen die frühere private Sites-Variante, die als getrennte Bereitstellung erhalten bleibt.
+
 Die mit der privaten Site verknüpfte Cloud-Aufgabe prüft alle 25 aktiven Katalogreihen täglich um 07:00 Uhr in Europe/Berlin, auch bei geschlossenem Browser. Quellen: Yahoo Finance, FRED, EZB, Shiller und EIA gemäß `lib/catalog.ts`. Verfügbarkeit und Veröffentlichungsrhythmus der Quellen begrenzen die Aktualität. Die 2023 eingestellten GBP/JPY-Serien bleiben historische Archive und sind von täglichen Abrufen ausgenommen; ihre FRED-Endpunkte lieferten beim Produktionstest HTTP 520. Ein manueller Abruf bleibt möglich. Die neuen NBER-Historien und die geprüfte NMA-Goldfassung bleiben ebenfalls Archivbestände; Shiller-Kurse/-CPI und EIA-Rohöl werden automatisch geprüft. Das Manifest liefert die aktiven IDs dynamisch.
 
 ## Unbeaufsichtigter Schreibweg

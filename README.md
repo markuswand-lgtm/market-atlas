@@ -6,6 +6,8 @@ Deutschsprachige Browser-App für historische Multi-Asset-Analyse, Geldmengen, I
 
 **Quellcode:** https://github.com/markuswand-lgtm/market-atlas
 
+**Unabhängige Browser-Version ohne ChatGPT:** Für GitHub Pages vorbereitet. Einmalig unter **Settings → Pages → Source → GitHub Actions** aktivieren; erst nach erfolgreichem Deployment erreichbar unter https://markuswand-lgtm.github.io/market-atlas/. [Betrieb, Datenbank und tägliche Aktualisierung](docs/independent-hosting.md).
+
 ## Funktionen
 
 - S&P 500, Dow Jones, DAX, Nasdaq 100, Nikkei 225, Gold-/Silber-Futures, WTI/Brent-Spotpreise.
@@ -76,4 +78,4 @@ docs/                Methodik und Entwicklungsfahrplan
 
 „Vollständig“ bezieht sich auf die abgerufene Quelle, nicht auf alle weltweit verfügbaren historischen Daten. Keine synthetischen Ersatzkurse. GBP/JPY-Reihen enden 2023. Gold/Silber sind Futures-, Öl ist eine Spotreihe. Daten können revidiert werden; noch keine Vintage-Datenbank. Die Inflationsbereinigung ist eine ex-post Kaufkraftdarstellung ohne FX-Konvertierung. Das Bild enthält eine historische Zyklusthese, keine belastbare Prognose.
 
-Details: [Methodik](docs/methodology.md), [Weiterentwicklung](docs/roadmap.md). Fremddatenrechte verbleiben bei ihren Quellen. Rohdaten werden privat genutzt und sind kein Bestandteil des öffentlichen Repositorys.
+Details: [Methodik](docs/methodology.md), [Weiterentwicklung](docs/roadmap.md). Fremddatenrechte verbleiben bei ihren Quellen. Für die unabhängige Bereitstellung enthält `data/bootstrap.json.gz` einen Startbestand mit Quellen- und Abrufnachweis. Die übrigen lokalen Rohdateien bleiben von Git ausgeschlossen.

@@ -4,6 +4,7 @@ import {AUTH_ENABLED,browserAuth} from '../lib/browser-auth';
 import type {Point} from '../lib/analytics';
 import type {LabOptions} from '../lib/strategy-lab';
 import type {FixedSet,SavedGroup,replay} from '../lib/fixed-sets';
+import MultiReplay from './multi-replay';
 import HoldoutCharts from './holdout-charts';
 import DataTable from './data-table';
 type Props={sets:FixedSet[];asset:string;points:Point[];from:string;to:string;options:LabOptions;currency:string;loading:boolean};
@@ -38,6 +39,7 @@ export default function SavedSets({sets,asset,points,from,to,options,currency,lo
  <button className="primary-button" disabled={loading||busy||!group} onClick={run}>Ohne Optimierung testen</button>{busy&&<button onClick={stop}>Abbrechen</button>}</div>
  <p>Die Auswahl bleibt in diesem Browser gespeichert. Für den Test gelten das oben gewählte Asset, der Zeitraum, Startkapital, Monatsrate, Gebühren und Slippage.</p>
  {group&&<p>Gespeichert aus {group.source} · {group.from} bis {group.to} · {group.sets.map(s=>s.variant.name).join(', ')}</p>}{message&&<p role="status">{message}</p>}
+ {group&&<MultiReplay key={group.id} group={group} asset={asset} from={from} to={to} options={options}/>}
  {report&&<><h4>{asset} · {report.testFrom} bis {report.to}</h4><div className="table-scroll"><DataTable><thead><tr><th>Parametersatz</th><th>Endkapital</th><th>Rendite (TWR)</th><th>Maximaler Drawdown</th></tr></thead><tbody>{[{...report.benchmark,name:'Buy & Hold · Referenz',id:'reference'},...report.results.map(r=>({...r,name:r.variant.name,id:r.variant.id}))].sort((a,b)=>b.capital.at(-1)!.value-a.capital.at(-1)!.value).map(r=><tr key={r.id}><td>{r.name}</td><td>{money(r.capital.at(-1)!.value)}</td><td>{pct(r.gain)}</td><td>{pct(r.drawdown)}</td></tr>)}</tbody></DataTable></div><HoldoutCharts report={report} currency={currency}/></>}
  </section>;
 }

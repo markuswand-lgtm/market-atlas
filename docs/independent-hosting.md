@@ -1,8 +1,10 @@
 # Eigenständiges Hosting ohne ChatGPT
 
-**Live:** [Market Atlas öffnen](https://markuswand-lgtm.github.io/market-atlas/). Am 18. November 2026 ohne Zugangsdaten geprüft: Oberfläche, alle 32 Datenreihen mit 140.062 Beobachtungen und SQLite-Download sind erreichbar.
+**Live:** [Market Atlas öffnen](https://markuswand-lgtm.github.io/market-atlas/). Am 18. November 2026 ohne Zugangsdaten geprüft: Oberfläche, 60 Datenreihen einschließlich Staatsverschuldung und SQLite-Download sind erreichbar.
 
 Die Variante für GitHub Pages enthält dieselbe React-Oberfläche und dieselben Analysefunktionen wie die private Site. Sie benötigt weder ChatGPT-Anmeldung noch OpenAI-Schlüssel, Cloudflare-Konto, Datenbank-Passwort oder dauerhaft laufenden eigenen Rechner. Die Kursdaten sind über den veröffentlichten Link öffentlich abrufbar. Der Zugang ist kein privater Arbeitsbereich.
+
+Für die vorbereitete offene Registrierung mit Firebase siehe [Login einrichten](login.md). Bis zur bestätigten Aktivierung bleibt der Zugang öffentlich.
 
 ## Einmalige Aktivierung
 
@@ -12,9 +14,9 @@ Die Variante für GitHub Pages enthält dieselbe React-Oberfläche und dieselben
 
 ## Datenbank und Aktualisierung
 
-`data/bootstrap.json.gz` enthält einen validierten Startbestand aller 32 Quellenreihen mit Quellen-URL und Abrufzeit. Er ermöglicht eine vollständige erste Veröffentlichung auch dann, wenn einzelne Quellen zeitweise nicht erreichbar sind. Es sind ausschließlich Marktdaten enthalten, keine Zugangsdaten oder persönlichen Nutzerangaben. Datenrechte bleiben bei den jeweiligen Quellen; der Code überträgt keine Rechte an Fremddaten. Quellen und Definitionen stehen im Katalog sowie in `docs/historical-sources.md`.
+`data/bootstrap.json.gz` enthält die ursprünglichen 32 Markt- und Geldreihen; `data/debt-bootstrap.json` ergänzt 28 Staatsverschuldungsreihen. Beide Startbestände sind validiert und enthalten Quellen-URL und Abrufzeit. Er ermöglicht eine vollständige erste Veröffentlichung auch dann, wenn einzelne Quellen zeitweise nicht erreichbar sind. Es sind ausschließlich Marktdaten enthalten, keine Zugangsdaten oder persönlichen Nutzerangaben. Datenrechte bleiben bei den jeweiligen Quellen; der Code überträgt keine Rechte an Fremddaten. Quellen und Definitionen stehen im Katalog sowie in `docs/historical-sources.md`.
 
-Der GitHub-Workflow lädt täglich um 07:00 Uhr Europe/Berlin die 25 aktiven Reihen; Sommer-/Winterzeit wird bei der Auswahl des UTC-Triggers berücksichtigt. GitHub kann geplante Jobs verzögern. Archivserien bleiben erhalten. Abgerufene Datumswerte aktualisieren vorhandene Beobachtungen, ältere Historie bleibt bestehen. Bei Quellenfehlern bleibt die letzte erfolgreiche Fassung verfügbar und die App zeigt einen Hinweis. Fehlt eine Reihe vollständig, wird nicht veröffentlicht.
+Der GitHub-Workflow lädt täglich um 07:00 Uhr Europe/Berlin die aktiven Katalogreihen; Sommer-/Winterzeit wird bei der Auswahl des UTC-Triggers berücksichtigt. GitHub kann geplante Jobs verzögern. Archivserien bleiben erhalten. Abgerufene Datumswerte aktualisieren vorhandene Beobachtungen, ältere Historie bleibt bestehen. Bei Quellenfehlern bleibt die letzte erfolgreiche Fassung verfügbar und die App zeigt einen Hinweis. Fehlt eine Reihe vollständig, wird nicht veröffentlicht.
 
 Für Dauerhaftigkeit werden der letzte veröffentlichte Datenstand und der GitHub-Actions-Cache wiederverwendet. Zusätzlich bleibt der Startbestand im Repository. Jede Veröffentlichung enthält eine echte **SQLite-Datenbank** (`data/market-atlas.sqlite`) mit Tabellen `series` und `observations`, sowie versionierte JSON-Reihen für schnelle Browserabfragen. Die Datenbank kann in der App heruntergeladen werden. Der Build veröffentlicht alle Dateien gemeinsam; das Manifest referenziert den zugehörigen Snapshot.
 

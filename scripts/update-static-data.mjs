@@ -17,7 +17,7 @@ for(const asset of ASSETS){
  const initial=bootstrap.find(s=>s.id===asset.id);if(initial&&(!cached||initial.retrievedAt>cached.retrievedAt))cached=initial;
  if(published){try{const restored=await getJson(new URL(`data/${published.snapshot}/${asset.id}.json`,previous));if(!cached||restored.retrievedAt>cached.retrievedAt)cached=restored;}catch{}}
  try{
-  if(cached&&ARCHIVED_IDS.includes(asset.id)){await fs.writeFile(filename,JSON.stringify(cached));console.log(`${asset.id}: verified archive retained`);continue;}
+  if(cached&&ARCHIVED_IDS.includes(asset.id)){const {refreshError,...archive}=cached;await fs.writeFile(filename,JSON.stringify(archive));console.log(`${asset.id}: verified archive retained`);continue;}
   let fresh;
   if(asset.provider==='archive'){
    execFileSync(process.env.PYTHON||'python',['scripts/download-gold-history.py'],{stdio:'inherit',timeout:120000});

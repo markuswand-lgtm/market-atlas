@@ -18,6 +18,7 @@ export default function MultiReplay({group,asset,from,to,options}:{group:SavedGr
  useEffect(()=>()=>{job.current?.terminate();job.current=null;},[]);
  function clear(){setRows([]);setErrors([]);}
  function stop(){job.current?.terminate();job.current=null;setStatus('');}
+ function editRange(i:number,key:keyof Range,value:string){clear();setRanges(previous=>previous.map((range,j)=>j===i?{...range,[key]:value}:range));}
  const valid=ranges.every(r=>validDate(r.from)&&validDate(r.to)&&r.from<=r.to);
  const unique=[...new Map(ranges.map(r=>[r.from+'/'+r.to,r])).values()];
  async function run(){
@@ -46,7 +47,7 @@ export default function MultiReplay({group,asset,from,to,options}:{group:SavedGr
  }
  return <details className="lab-settings"><summary>Mehrere Assets und Zeiträume testen</summary>
  <fieldset disabled={!!status}><legend>Assets</legend><div className="strategy-controls">{assets.map(a=><label key={a.id}><input type="checkbox" checked={ids.includes(a.id)} onChange={e=>{clear();setIds(e.target.checked?[...ids,a.id]:ids.filter(id=>id!==a.id));}}/>{a.name}</label>)}</div></fieldset>
- <fieldset disabled={!!status}><legend>Prüfzeiträume</legend>{ranges.map((r,i)=><div className="strategy-controls" key={i}>{(['from','to'] as const).map(k=><label key={k}>{k==='from'?'Von':'Bis'} · Zeitraum {i+1}<input type="date" value={r[k]} onChange={e=>{clear();setRanges(ranges.map((v,j)=>j===i?{...v,[k]:e.target.value}:v));}}/></label>)}<button disabled={ranges.length===1} onClick={()=>{clear();setRanges(ranges.filter((_,j)=>j!==i));}}>Zeitraum entfernen</button></div>)}
+ <fieldset disabled={!!status}><legend>Prüfzeiträume</legend>{ranges.map((r,i)=><div className="strategy-controls" key={i}>{(['from','to'] as const).map(k=><label key={k}>{k==='from'?'Von':'Bis'} · Zeitraum {i+1}<input type="date" value={r[k]} onInput={e=>editRange(i,k,e.currentTarget.value)} onChange={e=>editRange(i,k,e.currentTarget.value)}/></label>)}<button disabled={ranges.length===1} onClick={()=>{clear();setRanges(ranges.filter((_,j)=>j!==i));}}>Zeitraum entfernen</button></div>)}
  <button onClick={()=>{clear();setRanges([...ranges,{from:'',to:''}]);}}>Zeitraum hinzufügen</button></fieldset>
  <button className="primary-button" disabled={!valid||!ids.length||!!status} onClick={run}>Mehrfachvergleich starten</button> {status&&<><span role="status">{status}</span> <button onClick={stop}>Abbrechen</button></>}
  {errors.map((error,i)=><p key={i} role="alert">{error}</p>)}

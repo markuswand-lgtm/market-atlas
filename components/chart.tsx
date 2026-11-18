@@ -72,6 +72,6 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
    </g>}
   </svg>
   {hoverDate!==null&&<div className="chart-tooltip"><b>{new Date(hoverDate).toLocaleDateString('de-DE')}</b>{!nearest.length&&<p>Keine Beobachtung in diesem Zeitraum</p>}{nearest.map(l=><div key={l.id}><span style={{color:l.color}}>● {l.name}</span><strong>{fmt(l.point.value)}</strong><small>{l.frequency==='annual'?`${l.point.date.slice(0,4)} · Jahreswert`:l.frequency==='monthly'?l.point.date.slice(0,7):l.point.date}</small></div>)}</div>}
-  <div className="chart-legend">{lines.map(l=><span key={l.id}><i style={{background:l.color}}/>{l.name}{l.dashed?' · Trend':''}</span>)}{cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).map(([k,c])=><span key={k}><i style={{background:c.color}}/>{k} · {c.label}</span>)}</div>
+  <div className="chart-legend">{lines.map(l=><span key={l.id}><svg width="25" height="10" aria-hidden="true" style={{width:25,height:10}}><line x1="0" x2="25" y1="5" y2="5" stroke={l.color} strokeWidth="2" strokeDasharray={l.dashPattern||(l.dashed?'7 5':undefined)}/></svg>{l.name}{l.dashed?' · Trend':''}</span>)}{cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).map(([k,c])=><span key={k}><i style={{background:c.color}}/>{k} · {c.label}</span>)}</div>
  </div>;
 }

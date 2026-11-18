@@ -1,6 +1,8 @@
 import type {Point} from './analytics.ts';
 import {sampleSeries,type Interval} from './comparison-matrix.ts';
 export const HISTORY_MODELS=[
+ {id:'debt-usa-long',actual:'debt-usa-gdp',proxy:'debt-usa-history',frequency:'annual',name:'USA · Staatsschulden/BIP · Langzeitmodell',symbol:'USA LANG'},
+ {id:'debt-deu-long',actual:'debt-deu-gdp',proxy:'debt-deu-history',frequency:'annual',name:'Deutschland · Staatsschulden/BIP · Langzeitmodell',symbol:'DEU LANG'},
  {id:'msci-world-long',actual:'msci-world',proxy:'shiller-stock',frequency:'monthly',name:'MSCI World · Langzeit mit US-Proxy',symbol:'WORLD MODELL'},
  {id:'sp500-long',actual:'sp500',proxy:'shiller-stock',frequency:'monthly',name:'S&P 500 · Langzeit mit Shiller',symbol:'SPX LANG'},
  {id:'dow-long',actual:'dow',proxy:'shiller-stock',frequency:'monthly',name:'Dow Jones · Langzeit mit US-Proxy',symbol:'DJI MODELL'},

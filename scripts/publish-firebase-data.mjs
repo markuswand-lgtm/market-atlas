@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {initializeApp,cert,applicationDefault,deleteApp} from 'firebase-admin/app';
 import {getDatabase} from 'firebase-admin/database';
 import {firebaseConfig} from './firebase-config.mjs';
+import {publishManifest} from './firebase-retention.mjs';
 const config=firebaseConfig(process.env.MARKET_ATLAS_FIREBASE_CONFIG||await fs.readFile(new URL('../firebase/web-config.json',import.meta.url),'utf8'));
 if(!config){console.log('Public deployment: Firebase is not enabled.');process.exit(0);}
 if(!process.env.FIREBASE_SERVICE_ACCOUNT&&!process.env.GOOGLE_APPLICATION_CREDENTIALS)throw new Error('Firebase enabled but upload credential missing. Publication stopped.');
@@ -38,12 +39,7 @@ try{
   await snapshot.child('sqlite').update({encoding:sqlite.encoding,byteLength:sqlite.byteLength,sha256:sqlite.sha256});
   await snapshot.child('_complete').set(completion);
  }
- const history=(await database.ref('_publicationHistory').get()).val()||{};
- const retained=Object.entries(history).filter(([id])=>/^[a-f0-9]{16}$/.test(id)&&id!==manifest.snapshot).sort((a,b)=>String(b[1]).localeCompare(String(a[1]))).slice(0,2);
- const nextHistory=Object.fromEntries([...retained,[manifest.snapshot,manifest.publishedAt]]);
- const changes={manifest,_publicationHistory:nextHistory};
- for(const id of Object.keys(history))if(/^[a-f0-9]{16}$/.test(id)&&!nextHistory[id])changes['snapshots/'+id]=null;
- await database.ref().update(changes);
+ await publishManifest(database,manifest);
  // GitHub Pages must receive no public copy of the protected data.
  const expectedDirectory=path.join(process.cwd(),'dist-static','data');
  if(directory!==expectedDirectory)throw new Error('Unexpected data output directory.');

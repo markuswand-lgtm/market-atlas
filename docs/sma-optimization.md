@@ -17,3 +17,13 @@ Die Rangfolge verwendet ausschließlich das frühere Trainingssegment. Erst nach
 „Optimal“ bedeutet bestes Ergebnis im gewählten Raster, nach Ziel und Trainingsdaten. Es gibt keine Behauptung eines universell optimalen Zahlenpaars. Wiederholtes Anpassen nach Sichtung der Prüfung kann auch diese überanpassen; siehe [Novy-Marx, NBER Working Paper 21329](https://www.nber.org/papers/w21329). Kein Nachweis künftiger Profitabilität. Ergebnisse werden bei geändertem Asset, Zeitraum, Datenstand, Kosten, Kapital oder Suchraster verworfen. Die Suche lässt sich abbrechen.
 
 Tests prüfen gemeinsame Trainingsdaten, Übereinstimmung mit dem Kostenmodell, unveränderte Auswahl bei manipulierten Prüfpreisen, Stichproben-/Rastergrenzen und Abbruch.
+
+## SMA im Hauptdiagramm
+
+Unter dem Hauptdiagramm-Werkzeugbereich lassen sich schnelle und langsame SMA einzeln einblenden. Sie beziehen sich auf das erste ausgewählte Asset mit täglichen Kursen; die beiden Längen sind mit den Feldern des Strategielabors synchronisiert. Monats- und Jahresmittel sind für diese Tageskurs-SMA ausgeschlossen. Farben, Strichmuster, Legende und Tooltip unterscheiden die beiden Linien.
+
+Die Optimierung bietet zusätzlich **„Im Hauptdiagramm anzeigen“**. Das übernimmt den Gewinner in beide SMA-Felder, aktiviert beide Linien, setzt das optimierte Asset an die erste Stelle und öffnet die Marktanalyse im gewählten Zeitraum. Die Ansicht wird dabei auf nominale Werte umgestellt, passend zum Backtest; Inflationsbereinigung lässt sich anschließend wieder einschalten. Manuell eingestellte Längen können ebenfalls mit „SMA im Hauptdiagramm anzeigen“ übertragen werden. „Werte in Backtest übernehmen“ bleibt verfügbar und aktualisiert durch die gemeinsamen Felder auch bereits aktivierte SMA-Linien. Einstellungen gelten für die aktuelle geöffnete App-Sitzung.
+
+Die Berechnung verwendet die vollständige nominale Tageshistorie einschließlich Aufwärmdaten vor dem sichtbaren Zeitraum. Erst danach werden Zeitraum, Inflationsskalierung und gemeinsame Indexbasis angewendet. Eine SMA wird **nicht separat auf 100 normiert**: sie teilt die Basis des zugehörigen Assets, auch bei gemeinsamem Vergleichsstart. Inflationsbereinigung multipliziert Kurs und SMA am selben Datum mit demselben Faktor und erhält dadurch deren Kreuzungen. Es werden keine fehlenden Aufwärmwerte erfunden; unzureichende Daten und ungültige Fenster werden angezeigt. CSV-Exporte enthalten aktivierte SMA-Reihen mit Asset, Art und Fensterlänge in der Reihenkennung.
+
+Zusätzliche Tests prüfen Aufwärmdaten, gemeinsame Basis 100, Preisindex-Skalierung, fehlende Preisindexdaten und die Unabhängigkeit früherer SMA-Werte von späteren Kursen.

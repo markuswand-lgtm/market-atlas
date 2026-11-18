@@ -4,7 +4,7 @@ import {downsample,type Point} from '../lib/analytics';
 import {CYCLES,CYCLE_POINTS} from '../lib/cycles';
 import {timeDomain} from '../lib/display';
 
-export type ChartLine={id:string;name:string;color:string;points:Point[];dashed?:boolean;gapDays?:number;frequency?:'daily'|'monthly'|'annual'};
+export type ChartLine={id:string;name:string;color:string;points:Point[];dashed?:boolean;dashPattern?:string;gapDays?:number;frequency?:'daily'|'monthly'|'annual'};
 const fmt=(n:number)=>new Intl.NumberFormat('de-DE',{notation:Math.abs(n)>99999?'compact':'standard',maximumFractionDigits:1}).format(n);
 type Props={lines:ChartLine[];log?:boolean;cycles?:boolean;cycleKinds?:string[];label?:string;future?:boolean;from?:string;to?:string};
 
@@ -52,7 +52,7 @@ export default function Chart({lines,log=false,cycles=false,cycleKinds=['A','B',
    <g clipPath={`url(#${uid}-plot)`}>
     {cycles&&Object.entries(CYCLES).filter(([k])=>cycleKinds.includes(k)).flatMap(([key,c])=>c.years.filter(inRange).map(year=><g key={`${key}-${year}`}><line x1={x(Date.UTC(year,0,1))} x2={x(Date.UTC(year,0,1))} y1={T} y2={priceBottom} stroke={c.color} strokeOpacity={key==='A'?.45:.18} strokeDasharray="4 6"/><text x={x(Date.UTC(year,0,1))+4} y={T+12+(['A','B','C'].indexOf(key)*14)} fontSize="10" fill={c.color}>{key} {year}</text></g>))}
     {valid[0]?.points.length>1&&valid[0].segments.length===1&&valid.length<3&&<path d={`${path(valid[0].points)} L${x(valid[0].points.at(-1)!.date)},${priceBottom} L${x(valid[0].points[0].date)},${priceBottom} Z`} fill={`url(#${uid}-fill)`}/>}
-    {valid.map(l=><path key={l.id} d={l.segments.map(segment=>path(segment)).join(' ')} fill="none" stroke={l.color} strokeWidth={l.dashed?1.6:2} strokeDasharray={l.dashed?'7 5':undefined} vectorEffect="non-scaling-stroke"/>)}
+    {valid.map(l=><path key={l.id} d={l.segments.map(segment=>path(segment)).join(' ')} fill="none" stroke={l.color} strokeWidth={l.dashed?1.6:2} strokeDasharray={l.dashPattern||(l.dashed?'7 5':undefined)} vectorEffect="non-scaling-stroke"/>)}
     {hoverDate!==null&&<line x1={x(hoverDate)} x2={x(hoverDate)} y1={T} y2={priceBottom} stroke="#a6afbd" strokeDasharray="3 4"/>}
     {nearest.map(l=><circle key={l.id} cx={x(l.point.date)} cy={y(l.point.value)} r="4" fill={l.color} stroke="#161b23" strokeWidth="2"/>)}
    </g>

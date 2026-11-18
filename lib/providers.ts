@@ -1,3 +1,4 @@
+import {pinkSheetUrl,parsePinkSheet,PINK_SHEET_URL} from './pink-sheet.ts';
 import type {Asset} from './catalog.ts';
 import {sourceUrl} from './catalog.ts';
 import {cleanPoints,type Point} from './analytics.ts';
@@ -14,6 +15,8 @@ export function parseSource(a:Asset,text:string):Point[]{
 let shillerCache:{expires:number;promise:Promise<{bytes:Uint8Array;url:string;retrievedAt:string}>}|undefined;
 async function sourceFetch(url:string){const r=await fetch(url,{headers:{Accept:'*/*','User-Agent':'MarketAtlas/0.3 (historical research)'},signal:AbortSignal.timeout(45000)});if(!r.ok)throw new Error(`Datenquelle antwortet mit HTTP ${r.status}.`);if(Number(r.headers.get('content-length'))>20_000_000)throw new Error('Quelldatei überschreitet 20 MB.');return r;}
 export async function download(a:Asset){
+ if(a.provider==='model')throw new Error('Modellreihe: wird nach Aktualisierung ihrer Quellen durch den zentralen Datenjob neu berechnet.');
+ if(a.provider==='pink-sheet'){let url=PINK_SHEET_URL;try{url=pinkSheetUrl(await (await sourceFetch(a.link)).text());}catch{}const bytes=new Uint8Array(await (await sourceFetch(url)).arrayBuffer());return {rows:parsePinkSheet(bytes,a.series),url,retrievedAt:new Date().toISOString()};}
  if(a.provider==='imf')return downloadImfDebt(a.series);
  if(a.provider==='archive')throw new Error('Geprüftes PDF-Archiv. Erneuter Import über scripts/download-gold-history.py; der gespeicherte Bestand bleibt erhalten.');
  if(a.provider==='shiller'){

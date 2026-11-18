@@ -7,7 +7,7 @@ const out=path.resolve('work/data');await fs.mkdir(out,{recursive:true});
 const db=new DatabaseSync(path.join(out,'market-atlas.sqlite'));
 db.exec('PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS series(id TEXT PRIMARY KEY,name TEXT,source_url TEXT,retrieved_at TEXT,unit TEXT,frequency TEXT,first_date TEXT,last_date TEXT,count INTEGER); CREATE TABLE IF NOT EXISTS observations(series_id TEXT REFERENCES series(id),date TEXT,value REAL,PRIMARY KEY(series_id,date));');
 const insert=db.prepare('INSERT INTO observations VALUES(?,?,?) ON CONFLICT(series_id,date) DO UPDATE SET value=excluded.value');
-const requested=process.argv.slice(2);const chosen=requested.length?ASSETS.filter(a=>requested.includes(a.id)):ASSETS.filter(a=>a.provider!=='archive');
+const requested=process.argv.slice(2);const chosen=requested.length?ASSETS.filter(a=>requested.includes(a.id)):ASSETS.filter(a=>a.provider!=='archive'&&a.provider!=='model');
 if(requested.some(id=>!ASSETS.some(a=>a.id===id)))throw new Error('Unbekannte Reihen-ID.');
 let previous=[];try{previous=JSON.parse(await fs.readFile(path.join(out,'manifest.json'),'utf8'));}catch{}
 const manifest=previous.filter(m=>!chosen.some(a=>a.id===m.id));let failures=0;

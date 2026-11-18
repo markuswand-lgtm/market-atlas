@@ -15,7 +15,7 @@ test('Independent publication keeps all series in SQL and immutable JSON; missin
   const result=await exportStaticData(source,dest);
   assert.equal(result.series.length,ASSETS.length);assert.match(result.snapshot,/^[a-f0-9]{16}$/);
   const row=JSON.parse(await fs.readFile(path.join(dest,result.snapshot,'sp500.json'),'utf8'));assert.equal(row.rows[0].value,12);
-  const db=new DatabaseSync(path.join(dest,'market-atlas.sqlite'),{readOnly:true});assert.equal(db.prepare('SELECT COUNT(*) n FROM observations').get().n,ASSETS.length*2);db.close();
+  const db=new DatabaseSync(path.join(dest,'market-atlas.sqlite'),{readOnly:true});assert.equal(db.prepare('SELECT COUNT(*) n FROM observations').get().n,ASSETS.length*2);assert.equal(db.prepare('SELECT COUNT(*) n FROM provenance').get().n,ASSETS.length);db.close();
   await fs.unlink(path.join(source,'sp500.json'));await assert.rejects(exportStaticData(source,dest));
   assert.equal(JSON.parse(await fs.readFile(path.join(dest,'manifest.json'),'utf8')).snapshot,result.snapshot);
  }finally{await fs.rm(temporary,{recursive:true,force:true});}

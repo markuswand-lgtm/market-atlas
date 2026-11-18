@@ -1,3 +1,4 @@
+import {buildHistoryModels} from './build-history-models.mjs';
 import fs from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {gunzipSync} from 'node:zlib';
@@ -11,7 +12,7 @@ async function getJson(url){const r=await fetch(url,{signal:AbortSignal.timeout(
 let published;
 if(previous){try{published=await getJson(new URL('data/manifest.json',previous));if(!/^[a-f0-9]{16}$/.test(published.snapshot))throw new Error('Invalid snapshot');}catch{console.log('No previous publication available; using local cache or original sources.');published=null;}}
 let missing=0,failures=0;
-for(const asset of ASSETS){
+for(const asset of ASSETS.filter(a=>a.provider!=='model')){
  const filename=directory+'/'+asset.id+'.json';let cached;
  try{cached=JSON.parse(await fs.readFile(filename,'utf8'));}catch{}
  const initial=bootstrap.find(s=>s.id===asset.id);if(initial&&(!cached||initial.retrievedAt>cached.retrievedAt))cached=initial;
@@ -30,5 +31,6 @@ for(const asset of ASSETS){
   await fs.writeFile(filename,JSON.stringify(entry));console.log(`${asset.id}: ${rows.length} observations through ${entry.last}`);
  }catch(e){failures++;if(cached?.rows?.length){await fs.writeFile(filename,JSON.stringify({...cached,refreshError:'Source refresh failed'}));console.warn(`${asset.id}: retaining last successful snapshot (${e.message})`);}else{missing++;console.error(`${asset.id}: no usable history (${e.message})`);}}
 }
+if(!missing)await buildHistoryModels(directory);
 console.log(JSON.stringify({series:ASSETS.length,sourceFailures:failures,missing}));
 if(missing)throw new Error('Incomplete initial archive; publication stopped to protect the previous version.');

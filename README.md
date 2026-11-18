@@ -12,14 +12,16 @@ Die frühere private Sites-Version bleibt separat unter https://market-atlas-mw-
 
 ## Neue Erweiterungen
 
+- **Quellen & Langzeitmodelle:** acht getrennte Rückrechnungen mit nachvollziehbarem Anker; zusätzliche Weltbank-Silberdaten ab 1960. Datenbank mit Quellenzeitachse, Legende und Details pro Abschnitt. [Methodik und Herkunft](docs/historical-models.md).
+
 - **Strategie- und Ordervergleich:** elf klassische und experimentelle Strategien, Market/Limit/Stop/Stop-Limit, optionale Schutz- und Rebalancingregeln, bis zu zwölf Varianten mit Kurven, Kennzahlen und Orderexport; zusätzlich monatliche Einzahlungen mit getrenntem Gewinn und bereinigter Rendite. [Bedienung und Modell](docs/strategy-lab.md).
-- **Vergleichsmatrix:** alle 60 Reihen, verschiebbare Zeitfenster mit Wiedergabe, Korrelation und relative Veränderungen, anpassbare Farben, Fokus-Asset mit relativen Minima/Maxima samt Datum, Quotientendiagramm mit frei wählbaren Quantilen und historische Verlaufsspur. [Bedienung und Berechnung](docs/comparison-matrix.md).
+- **Vergleichsmatrix:** alle 70 Reihen, verschiebbare Zeitfenster mit Wiedergabe, Korrelation und relative Veränderungen, anpassbare Farben, Fokus-Asset mit relativen Minima/Maxima samt Datum, Quotientendiagramm mit frei wählbaren Quantilen und rollierenden Rückblickfenstern und historische Verlaufsspur. [Bedienung und Berechnung](docs/comparison-matrix.md).
 - **Staatsverschuldung:** zwölf Länder und Weltaggregat, Schuldenquote sowie abgeleiteter USD-Betrag; separate USA-/Deutschland-Historien ab 1800/1880. [Quellen und Methodik](docs/government-debt.md).
 - **Offene Registrierung:** E-Mail/Passwort, Bestätigung, Zurücksetzen und Abmelden mit Firebase. Serverseitig geschützter Datenzugriff und kurzlebige GitHub-Zugangsdaten für den täglichen Datenjob. [Anmeldung und Zugriffsschutz](docs/login.md).
 
 ## Funktionen
 
-- S&P 500, Dow Jones, DAX, Nasdaq 100, Nikkei 225, Gold-/Silber-Futures, WTI/Brent-Spotpreise.
+- MSCI World (Anbieterhistorie ab 1972), S&P 500, Dow Jones, DAX, Nasdaq 100, Nikkei 225, Gold-/Silber-Futures, WTI/Brent-Spotpreise.
 - Kryptowährungen in USD: Bitcoin, Ethereum, BNB, XRP, Solana, Cardano, Dogecoin, TRON und Chainlink.
 - Geldmengen: USD M2, EUR M3 sowie GBP/JPY M3 als ausdrücklich bezeichnete Archivserien.
 - Tages-/Monatsdaten über den vollständigen verfügbaren Zeitraum der jeweiligen Quelle; SQLite/D1 mit Quellennachweis und Importprotokoll.
@@ -56,7 +58,7 @@ Die Konsole zeigt die lokale URL (normalerweise http://localhost:5173). **Datenb
 npm run data:download
 ```
 
-Schreibt `work/data/market-atlas.sqlite`, CSV-/JSON-Dateien für alle Katalogreihen und ein Quellenmanifest. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
+Schreibt `work/data/market-atlas.sqlite`, CSV-/JSON-Dateien für die direkt abrufbaren Quellenreihen und ein Quellenmanifest. Für den vollständigen statischen Bestand einschließlich Archivquellen und neu berechneter Langzeitmodelle `node scripts/update-static-data.mjs` verwenden. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
 
 ```sh
 node scripts/import-archive.mjs http://localhost:5173

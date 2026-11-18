@@ -12,6 +12,7 @@ try{
  if(!manifest||!/^[a-f0-9]{16}$/.test(manifest.snapshot)||!Array.isArray(manifest.series))throw new Error('The protected archive is not initialized. Refusing to replace it with a bootstrap snapshot.');
  await fs.mkdir('work/data',{recursive:true});
  for(const asset of ASSETS){
+  if(!manifest.series.some(s=>s.id===asset.id)){console.log(`New catalog series ${asset.id}: source download or model generation required before publication.`);continue;}
   const entry=(await db.ref(`snapshots/${manifest.snapshot}/series/${asset.id}`).get()).val();
   if(entry?.id!==asset.id||!Array.isArray(entry.rows)||!entry.rows.length||entry.rows.length!==cleanPoints(entry.rows).length||!Number.isFinite(Date.parse(entry.retrievedAt)))throw new Error('Invalid protected archive: '+asset.id);
   const filename=`work/data/${asset.id}.json`;let cache;try{cache=JSON.parse(await fs.readFile(filename,'utf8'));}catch{}

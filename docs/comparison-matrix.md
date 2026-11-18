@@ -1,6 +1,6 @@
 # Vergleichsmatrix
 
-Die neue Ansicht **Vergleichsmatrix** vergleicht alle 60 verfügbaren Reihen. Das Startpreset umfasst die 18 täglich erfassten Markt-Assets. Weitere Presets übernehmen die Auswahl des Hauptdiagramms, alle Reihen oder Langzeithistorien. Gruppen und einzelne Reihen können frei gewählt werden.
+Die neue Ansicht **Vergleichsmatrix** vergleicht alle 70 verfügbaren Reihen. Das Startpreset umfasst die 19 täglich erfassten Markt-Assets. Weitere Presets übernehmen die Auswahl des Hauptdiagramms, alle Reihen oder Langzeithistorien. Gruppen und einzelne Reihen können frei gewählt werden.
 
 ## Bedienung
 
@@ -52,3 +52,7 @@ Quantile verwenden alle gültigen Beobachtungen im angezeigten Verhältniszeitra
 ## Diagrammachsen
 
 Alle Haupt-, Verhältnis- und Strategiediagramme verwenden glatte Y-Skalen, kalenderbezogene X-Markierungen und Hilfslinien beider Achsen. Basis-100-Diagramme heben die 100-%-Linie hervor. Rohwertdiagramme zeigen ihre ursprünglichen Einheiten. Logarithmische Achsen verwenden positive 1/2/5-Potenzen, bei engem Bereich passende Zwischenwerte.
+
+## Rollierende Quantile
+
+Unter dem Verhältnisdiagramm kann bei aktivierten Quantilen zwischen dem gesamten dargestellten Zeitraum und einem rollierenden Kalenderfenster gewechselt werden. Presets 1, 2, 5, 10 und 20 Jahre, frei 1–200 ganze Jahre. Jeder Quantilpunkt verwendet nur Beobachtungen aus `[Datum minus N Jahre, Datum]`. Der 29. Februar wird bei Bedarf auf den 28. Februar zurückgesetzt. Quantillinien beginnen erst, wenn ein vollständiger Kalender-Rückblick vorliegt; es werden mindestens zwei gültige Beobachtungen benötigt. Vor dem sichtbaren Matrixfenster vorhandene Kurse dürfen zum Rückblick beitragen. Keine zukünftigen Beobachtungen und keine Datenauffüllung. Quantile werden auf allen Beobachtungen berechnet, nicht auf der verdichteten Zeichenkurve. Bezeichnungen verwenden `S&P 500/Gold` als Verhältnisname.

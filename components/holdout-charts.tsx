@@ -10,7 +10,7 @@ type Mode=keyof typeof modes;
 function setting(value:unknown){
  return ({weekly:'wöchentlich',daily:'täglich',monthly:'monatlich',true:'ja',false:'nein'}[String(value)]??String(value));
 }
-export default function HoldoutCharts({report,currency}:{report:Omit<BatchReport,'results'>&{results:(BatchReport['results'][number]&{color:string})[]};currency:string}){
+export default function HoldoutCharts({report,currency}:{report:Pick<BatchReport,'testFrom'|'to'|'benchmark'>&{results:(Pick<BatchReport['results'][number],'variant'|'settings'|'capital'|'losses'>&{color:string})[]};currency:string}){
  const [hidden,setHidden]=useState<Set<string>>(()=>new Set());
  const series=[{...report.benchmark,id:'reference',name:'Buy & Hold',color:'#cad3e2',dashPattern:'8 4',description:'Referenz · 100 % investiert · Market'},...report.results.map(r=>({
   capital:r.capital,losses:r.losses,id:'variant-'+r.variant.id,name:r.variant.name,color:r.color,dashPattern:undefined,

@@ -27,7 +27,7 @@ function chartCurves(run:ReturnType<typeof runVariant>){
  return {capital:run.curve,losses};
 }
 type Candidate={settings:Partial<LabOptions>;score:number;capital:number;gain:number;drawdown:number};
-function evaluateHoldout(points:Point[],split:number,end:number,variant:Variant,options:LabOptions){
+export function evaluateHoldout(points:Point[],split:number,end:number,variant:Variant,options:LabOptions){
  const run=runVariant(points,split,end,variant,options);
  if(run.metrics?.total==null||run.metrics.drawdown==null)throw Error('Prüfkennzahlen fehlen.');
  const curves=chartCurves(run);

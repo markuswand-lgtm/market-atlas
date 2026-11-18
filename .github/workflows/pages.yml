@@ -28,6 +28,9 @@ jobs:
     if: needs.schedule.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: read
+      id-token: write
     env:
       MARKET_ATLAS_FIREBASE_CONFIG: ${{ vars.MARKET_ATLAS_FIREBASE_CONFIG }}
     steps:
@@ -46,9 +49,16 @@ jobs:
           path: work/data
           key: market-atlas-data-${{ github.run_id }}
           restore-keys: market-atlas-data-
+      - name: Authenticate protected archive reader
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: market-atlas-mw-20261118
+          workload_identity_provider: projects/838142580310/locations/global/workloadIdentityPools/market-atlas-github/providers/github
+          service_account: market-atlas-publisher@market-atlas-mw-20261118.iam.gserviceaccount.com
+          create_credentials_file: true
+      - name: Recover last protected publication
+        run: node scripts/restore-firebase-data.mjs
       - name: Download sources and retain historical observations
-        env:
-          MARKET_ATLAS_URL: https://markuswand-lgtm.github.io/market-atlas/
         run: node scripts/update-static-data.mjs
       - run: npm test
       - run: npm run typecheck
@@ -57,9 +67,14 @@ jobs:
         with:
           path: work/data
           key: market-atlas-data-${{ github.run_id }}
-      - name: Publish protected data when Firebase is configured
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Authenticate database publisher with short-lived GitHub identity
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: market-atlas-mw-20261118
+          workload_identity_provider: projects/838142580310/locations/global/workloadIdentityPools/market-atlas-github/providers/github
+          service_account: market-atlas-publisher@market-atlas-mw-20261118.iam.gserviceaccount.com
+          create_credentials_file: true
+      - name: Publish protected data
         run: node scripts/publish-firebase-data.mjs
       - uses: actions/upload-pages-artifact@v4
         with:

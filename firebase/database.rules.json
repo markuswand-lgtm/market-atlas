@@ -6,7 +6,7 @@
     "snapshots": {
       "$snapshot": {
         "series": { "$series": { ".read": "auth != null && auth.token.email_verified === true" } },
-        "sqliteBase64": { ".read": "auth != null && auth.token.email_verified === true" }
+        "sqlite": { ".read": "auth != null && auth.token.email_verified === true" }
       }
     }
   }

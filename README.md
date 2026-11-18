@@ -2,11 +2,11 @@
 
 Deutschsprachige Browser-App für historische Multi-Asset-Analyse, Geldmengen, Inflationsbereinigung und nachvollziehbare Strategietests.
 
-**Browser-App ohne Anmeldung:** https://markuswand-lgtm.github.io/market-atlas/
+**Browser-App mit kostenloser Registrierung:** https://markuswand-lgtm.github.io/market-atlas/
 
 **Quellcode:** https://github.com/markuswand-lgtm/market-atlas
 
-Die App läuft auf GitHub Pages, unabhängig von ChatGPT, Codex und einem eigenen laufenden Rechner. Der Link ist öffentlich nutzbar und benötigt weder ein ChatGPT- noch ein GitHub-Konto. [Betrieb, Datenbank und tägliche Aktualisierung](docs/independent-hosting.md).
+Die App läuft auf GitHub Pages, unabhängig von ChatGPT, Codex und einem eigenen laufenden Rechner. Jeder kann ein eigenes Market-Atlas-Konto registrieren. Nach E-Mail-Bestätigung stehen Analysen und Downloads bereit; weder ein ChatGPT- noch ein GitHub-Konto ist erforderlich. [Betrieb, Datenbank und tägliche Aktualisierung](docs/independent-hosting.md).
 
 Die frühere private Sites-Version bleibt separat unter https://market-atlas-mw-20261117.workspace-vo-6330.chatgpt.site verfügbar.
 
@@ -14,7 +14,7 @@ Die frühere private Sites-Version bleibt separat unter https://market-atlas-mw-
 
 - **Vergleichsmatrix:** alle 60 Reihen, verschiebbare Zeitfenster mit Wiedergabe, Korrelation und relative Veränderungen, anpassbare Farben, Paardiagramm und historische Verlaufsspur. [Bedienung und Berechnung](docs/comparison-matrix.md).
 - **Staatsverschuldung:** zwölf Länder und Weltaggregat, Schuldenquote sowie abgeleiteter USD-Betrag; separate USA-/Deutschland-Historien ab 1800/1880. [Quellen und Methodik](docs/government-debt.md).
-- **Offene Registrierung vorbereitet:** E-Mail/Passwort, Bestätigung, Zurücksetzen und Abmelden mit Firebase. Noch nicht produktiv aktiviert; benötigt die Firebase-Verbindung und serverseitige Konfiguration. [Aktivierung und Zugriffsschutz](docs/login.md).
+- **Offene Registrierung:** E-Mail/Passwort, Bestätigung, Zurücksetzen und Abmelden mit Firebase. Serverseitig geschützter Datenzugriff und kurzlebige GitHub-Zugangsdaten für den täglichen Datenjob. [Anmeldung und Zugriffsschutz](docs/login.md).
 
 ## Funktionen
 

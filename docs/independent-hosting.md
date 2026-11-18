@@ -1,10 +1,10 @@
 # Eigenständiges Hosting ohne ChatGPT
 
-**Live:** [Market Atlas öffnen](https://markuswand-lgtm.github.io/market-atlas/). Am 18. November 2026 ohne Zugangsdaten geprüft: Oberfläche, 60 Datenreihen einschließlich Staatsverschuldung und SQLite-Download sind erreichbar.
+**Live:** [Market Atlas öffnen](https://markuswand-lgtm.github.io/market-atlas/). Offene Registrierung mit eigenem Market-Atlas-Konto. Nach E-Mail-Bestätigung stehen 60 Datenreihen einschließlich Staatsverschuldung, Vergleichsmatrix und SQLite-Download bereit.
 
-Die Variante für GitHub Pages enthält dieselbe React-Oberfläche und dieselben Analysefunktionen wie die private Site. Sie benötigt weder ChatGPT-Anmeldung noch OpenAI-Schlüssel, Cloudflare-Konto, Datenbank-Passwort oder dauerhaft laufenden eigenen Rechner. Die Kursdaten sind über den veröffentlichten Link öffentlich abrufbar. Der Zugang ist kein privater Arbeitsbereich.
+Die Variante für GitHub Pages enthält dieselbe React-Oberfläche und dieselben Analysefunktionen wie die private Site. Sie benötigt weder ChatGPT-Anmeldung noch OpenAI-Schlüssel, Cloudflare-Konto, Datenbank-Passwort oder dauerhaft laufenden eigenen Rechner. Die Oberfläche ist öffentlich erreichbar; die App-Daten erfordern ein bestätigtes Konto. Besucher haben ausschließlich Lesezugriff.
 
-Für die vorbereitete offene Registrierung mit Firebase siehe [Login einrichten](login.md). Bis zur bestätigten Aktivierung bleibt der Zugang öffentlich.
+Der unabhängige Anmeldedienst läuft über Firebase. Siehe [Registrierung und Zugriffsschutz](login.md).
 
 ## Einmalige Aktivierung
 
@@ -18,7 +18,7 @@ Für die vorbereitete offene Registrierung mit Firebase siehe [Login einrichten]
 
 Der GitHub-Workflow lädt täglich um 07:00 Uhr Europe/Berlin die aktiven Katalogreihen; Sommer-/Winterzeit wird bei der Auswahl des UTC-Triggers berücksichtigt. GitHub kann geplante Jobs verzögern. Archivserien bleiben erhalten. Abgerufene Datumswerte aktualisieren vorhandene Beobachtungen, ältere Historie bleibt bestehen. Bei Quellenfehlern bleibt die letzte erfolgreiche Fassung verfügbar und die App zeigt einen Hinweis. Fehlt eine Reihe vollständig, wird nicht veröffentlicht.
 
-Für Dauerhaftigkeit werden der letzte veröffentlichte Datenstand und der GitHub-Actions-Cache wiederverwendet. Zusätzlich bleibt der Startbestand im Repository. Jede Veröffentlichung enthält eine echte **SQLite-Datenbank** (`data/market-atlas.sqlite`) mit Tabellen `series` und `observations`, sowie versionierte JSON-Reihen für schnelle Browserabfragen. Die Datenbank kann in der App heruntergeladen werden. Der Build veröffentlicht alle Dateien gemeinsam; das Manifest referenziert den zugehörigen Snapshot.
+Für Dauerhaftigkeit wird der letzte geschützte Datenstand vor jedem Quellenabruf mit dem eingeschränkten GitHub-Dienstkonto wiederhergestellt; ergänzend dient der GitHub-Actions-Cache. Zusätzlich bleibt der Startbestand im Repository. Jede Veröffentlichung enthält eine echte **SQLite-Datenbank** (`data/market-atlas.sqlite`) mit Tabellen `series` und `observations`, sowie versionierte JSON-Reihen für schnelle Browserabfragen. Die Datenbank kann in der App heruntergeladen werden. Der Publisher lädt den vollständigen Snapshot geschützt nach Firebase und schaltet anschließend das Manifest atomar um. SQLite wird in Blöcken mit Prüfsumme gespeichert. GitHub Pages erhält keine öffentlichen Daten-JSONs oder SQLite-Datei.
 
 „Neueste Daten laden“ lädt die jüngste veröffentlichte Fassung. Ein öffentlicher Browser kann keine zentralen Kursdaten überschreiben oder beliebige Quelldownloads starten. Zum sofortigen Quellenabruf kann der Repository-Eigentümer den GitHub-Workflow manuell ausführen. Der tägliche Job läuft unabhängig von ChatGPT, Codex und der bisherigen privaten Site.
 
@@ -33,6 +33,6 @@ npm run build:static
 npm run preview:static
 ```
 
-Der fertige Ordner `dist-static/` kann vollständig bei einem beliebigen statischen Hoster bereitgestellt werden. Relative Pfade erlauben sowohl eine eigene Domain als auch ein Unterverzeichnis. Die bisherige Sites-/Worker-Variante bleibt über `npm run build` separat baubar; `build:static` enthält keinen Sites-Proxy und führt keine Aufrufe gegen die private Site aus.
+Der Build erzeugt zunächst `dist-static/data` für den geschützten Publisher. Für eine Veröffentlichung den Publisher mit dem passenden Dienstzugang ausführen; er entfernt diesen Datenordner erst nach erfolgreichem Firebase-Upload. Nur den danach verbleibenden Ordner `dist-static/` beim statischen Hoster bereitstellen und dessen Domain in Firebase Authentication autorisieren. Relative Pfade erlauben sowohl eine eigene Domain als auch ein Unterverzeichnis. Die bisherige Sites-/Worker-Variante bleibt über `npm run build` separat baubar; `build:static` enthält keinen Sites-Proxy und führt keine Aufrufe gegen die private Site aus.
 
 Dokumentation: [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [geplante GitHub-Workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).

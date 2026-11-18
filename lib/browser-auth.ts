@@ -1,6 +1,7 @@
 import {initializeApp,type FirebaseOptions} from 'firebase/app';
 import {getAuth,signOut,type Auth} from 'firebase/auth';
 import {getDatabase,get,ref,type Database} from 'firebase/database';
+import {decodeSqliteTransfer} from './sqlite-transfer.ts';
 
 declare const __MARKET_ATLAS_FIREBASE_CONFIG__:FirebaseOptions|null;
 const config=typeof __MARKET_ATLAS_FIREBASE_CONFIG__==='undefined'?null:__MARKET_ATLAS_FIREBASE_CONFIG__;
@@ -22,9 +23,7 @@ export async function authenticatedData(path:string){
 export async function logout(){await signOut(browserAuth());window.location.reload();}
 export async function downloadDatabase(snapshot:string){
  if(!/^[a-f0-9]{16}$/.test(snapshot))throw new Error('Ungültiger Datenstand.');
- const encoded=await authenticatedData(`snapshots/${snapshot}/sqliteBase64`);
- if(typeof encoded!=='string')throw new Error('Datenbankformat nicht erkannt.');
- const raw=atob(encoded),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
+ const bytes=await decodeSqliteTransfer(await authenticatedData(`snapshots/${snapshot}/sqlite`));
  const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.sqlite3'}));
  const a=document.createElement('a');a.href=url;a.download='market-atlas.sqlite';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

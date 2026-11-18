@@ -2,6 +2,7 @@ import type {Asset} from './catalog.ts';
 import {sourceUrl} from './catalog.ts';
 import {cleanPoints,type Point} from './analytics.ts';
 import {parseEiaHistory,parseShiller,shillerDownloadUrl} from './history-providers.ts';
+import {downloadImfDebt} from './debt-provider.ts';
 export function parseCsv(text:string){const rows:string[][]=[];let row:string[]=[],field='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){field+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){row.push(field);field='';}else if(c==='\n'&&!quoted){row.push(field.replace(/\r$/,''));if(row.some(Boolean))rows.push(row);row=[];field='';}else field+=c;}if(field||row.length){row.push(field.replace(/\r$/,''));rows.push(row);}if(quoted)throw new Error('Ungültige CSV-Anführungszeichen.');return rows;}
 export function parseSource(a:Asset,text:string):Point[]{
  let rows:Point[]=[];
@@ -13,6 +14,7 @@ export function parseSource(a:Asset,text:string):Point[]{
 let shillerCache:{expires:number;promise:Promise<{bytes:Uint8Array;url:string;retrievedAt:string}>}|undefined;
 async function sourceFetch(url:string){const r=await fetch(url,{headers:{Accept:'*/*','User-Agent':'MarketAtlas/0.3 (historical research)'},signal:AbortSignal.timeout(45000)});if(!r.ok)throw new Error(`Datenquelle antwortet mit HTTP ${r.status}.`);if(Number(r.headers.get('content-length'))>20_000_000)throw new Error('Quelldatei überschreitet 20 MB.');return r;}
 export async function download(a:Asset){
+ if(a.provider==='imf')return downloadImfDebt(a.series);
  if(a.provider==='archive')throw new Error('Geprüftes PDF-Archiv. Erneuter Import über scripts/download-gold-history.py; der gespeicherte Bestand bleibt erhalten.');
  if(a.provider==='shiller'){
   if(!shillerCache||shillerCache.expires<Date.now()){const promise=(async()=>{const html=await (await sourceFetch(sourceUrl(a))).text();const url=shillerDownloadUrl(html),bytes=new Uint8Array(await (await sourceFetch(url)).arrayBuffer());if(bytes.length>20_000_000)throw new Error('Quelldatei überschreitet 20 MB.');return {url,bytes,retrievedAt:new Date().toISOString()};})();shillerCache={expires:Date.now()+300000,promise};}

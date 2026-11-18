@@ -13,9 +13,9 @@ test('Independent publication keeps all series in SQL and immutable JSON; missin
   await fs.mkdir(source);
   for(const a of ASSETS)await fs.writeFile(path.join(source,a.id+'.json'),JSON.stringify({sourceUrl:a.link,retrievedAt:'2026-11-17T10:00:00Z',rows:[{date:'1890-01-01',value:12},{date:'1890-01-02',value:13}]}));
   const result=await exportStaticData(source,dest);
-  assert.equal(result.series.length,32);assert.match(result.snapshot,/^[a-f0-9]{16}$/);
+  assert.equal(result.series.length,ASSETS.length);assert.match(result.snapshot,/^[a-f0-9]{16}$/);
   const row=JSON.parse(await fs.readFile(path.join(dest,result.snapshot,'sp500.json'),'utf8'));assert.equal(row.rows[0].value,12);
-  const db=new DatabaseSync(path.join(dest,'market-atlas.sqlite'),{readOnly:true});assert.equal(db.prepare('SELECT COUNT(*) n FROM observations').get().n,64);db.close();
+  const db=new DatabaseSync(path.join(dest,'market-atlas.sqlite'),{readOnly:true});assert.equal(db.prepare('SELECT COUNT(*) n FROM observations').get().n,ASSETS.length*2);db.close();
   await fs.unlink(path.join(source,'sp500.json'));await assert.rejects(exportStaticData(source,dest));
   assert.equal(JSON.parse(await fs.readFile(path.join(dest,'manifest.json'),'utf8')).snapshot,result.snapshot);
  }finally{await fs.rm(temporary,{recursive:true,force:true});}

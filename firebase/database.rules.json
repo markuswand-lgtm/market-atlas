@@ -1,0 +1,13 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "manifest": { ".read": "auth != null && auth.token.email_verified === true" },
+    "snapshots": {
+      "$snapshot": {
+        "series": { "$series": { ".read": "auth != null && auth.token.email_verified === true" } },
+        "sqliteBase64": { ".read": "auth != null && auth.token.email_verified === true" }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 declare const __MARKET_ATLAS_STATIC__: boolean;
+import {AUTH_ENABLED,authenticatedData} from './browser-auth.ts';
 export const STATIC_HOSTING=typeof __MARKET_ATLAS_STATIC__!=='undefined'&&__MARKET_ATLAS_STATIC__;
 type Manifest={snapshot:string;series:unknown[];warning?:string};
 let manifest:Manifest|undefined;
@@ -14,8 +15,8 @@ export async function apiJson(url:string,body?:unknown){
  const route=new URL(url,'https://market-atlas.invalid');
  if(route.pathname!=='/api/data')throw new Error('Unbekannter Datenabruf.');
  const id=route.searchParams.get('id');
- if(!id||!manifest){const result=await readJson(publicPath('data/manifest.json'),{cache:'no-store'});if(!/^[a-f0-9]{16}$/.test(result.snapshot)||!Array.isArray(result.series))throw new Error('Ungültiges Datenmanifest.');manifest=result;}
+ if(!id||!manifest){const result=AUTH_ENABLED?await authenticatedData('manifest'):await readJson(publicPath('data/manifest.json'),{cache:'no-store'});if(!/^[a-f0-9]{16}$/.test(result.snapshot)||!Array.isArray(result.series))throw new Error('Ungültiges Datenmanifest.');manifest=result;}
  if(!id)return manifest;
  if(!/^[a-z0-9-]+$/.test(id))throw new Error('Unbekannte Reihe.');
- return readJson(publicPath(`data/${manifest!.snapshot}/${id}.json`));
+ return AUTH_ENABLED?authenticatedData(`snapshots/${manifest!.snapshot}/series/${id}`):readJson(publicPath(`data/${manifest!.snapshot}/${id}.json`));
 }

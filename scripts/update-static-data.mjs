@@ -5,7 +5,7 @@ import {ASSETS,ARCHIVED_IDS} from '../lib/catalog.ts';
 import {download} from '../lib/providers.ts';
 import {cleanPoints} from '../lib/analytics.ts';
 const directory='work/data';await fs.mkdir(directory,{recursive:true});
-const bootstrap=JSON.parse(gunzipSync(await fs.readFile('data/bootstrap.json.gz'))).series;
+const bootstrap=[...JSON.parse(gunzipSync(await fs.readFile('data/bootstrap.json.gz'))).series,...JSON.parse(await fs.readFile('data/debt-bootstrap.json','utf8')).series];
 const previous=process.env.MARKET_ATLAS_URL;
 async function getJson(url){const r=await fetch(url,{signal:AbortSignal.timeout(60000)});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json();}
 let published;

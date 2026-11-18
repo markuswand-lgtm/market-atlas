@@ -10,6 +10,11 @@ Die App läuft auf GitHub Pages, unabhängig von ChatGPT, Codex und einem eigene
 
 Die frühere private Sites-Version bleibt separat unter https://market-atlas-mw-20261117.workspace-vo-6330.chatgpt.site verfügbar.
 
+## Neue Erweiterungen
+
+- **Staatsverschuldung:** zwölf Länder und Weltaggregat, Schuldenquote sowie abgeleiteter USD-Betrag; separate USA-/Deutschland-Historien ab 1800/1880. [Quellen und Methodik](docs/government-debt.md).
+- **Offene Registrierung vorbereitet:** E-Mail/Passwort, Bestätigung, Zurücksetzen und Abmelden mit Firebase. Noch nicht produktiv aktiviert; benötigt die Firebase-Verbindung und serverseitige Konfiguration. [Aktivierung und Zugriffsschutz](docs/login.md).
+
 ## Funktionen
 
 - S&P 500, Dow Jones, DAX, Nasdaq 100, Nikkei 225, Gold-/Silber-Futures, WTI/Brent-Spotpreise.
@@ -49,7 +54,7 @@ Die Konsole zeigt die lokale URL (normalerweise http://localhost:5173). **Datenb
 npm run data:download
 ```
 
-Schreibt `work/data/market-atlas.sqlite`, CSV-/JSON-Dateien für alle 32 Reihen und ein Quellenmanifest. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
+Schreibt `work/data/market-atlas.sqlite`, CSV-/JSON-Dateien für alle Katalogreihen und ein Quellenmanifest. Diese Rohdaten werden **nicht in Git eingecheckt**. Die App-Datenbank und dieses exportierbare SQLite-Archiv sind getrennte Speicher. Der folgende Befehl importiert das heruntergeladene Archiv über die App-API:
 
 ```sh
 node scripts/import-archive.mjs http://localhost:5173

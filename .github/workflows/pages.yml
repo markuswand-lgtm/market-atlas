@@ -28,6 +28,8 @@ jobs:
     if: needs.schedule.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      MARKET_ATLAS_FIREBASE_CONFIG: ${{ vars.MARKET_ATLAS_FIREBASE_CONFIG }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,6 +57,10 @@ jobs:
         with:
           path: work/data
           key: market-atlas-data-${{ github.run_id }}
+      - name: Publish protected data when Firebase is configured
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node scripts/publish-firebase-data.mjs
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist-static

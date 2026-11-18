@@ -12,6 +12,7 @@
 # Generated builds and framework state
 /dist/
 /dist-static/
+/static-app/dist-login-preview/
 /.next/
 /.vinext/
 /out/

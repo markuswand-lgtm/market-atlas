@@ -10,7 +10,14 @@ function windows(min:number,max:number,step:number){
  return Array.from({length:Math.floor((max-min)/step)+1},(_,i)=>min+i*step);
 }
 export function searchPairs(o:SearchOptions){
- const pairs=windows(o.fastMin,o.fastMax,o.fastStep).flatMap(fast=>windows(o.slowMin,o.slowMax,o.slowStep).filter(slow=>slow>fast).map(slow=>({fast,slow})));
+ const pairs:{fast:number;slow:number}[]=[];
+ const slowWindows=windows(o.slowMin,o.slowMax,o.slowStep);
+ for(const fast of windows(o.fastMin,o.fastMax,o.fastStep)){
+  for(const slow of slowWindows)if(slow>fast){
+   pairs.push({fast,slow});
+   if(pairs.length>2500)throw new Error('Bitte den Suchbereich auf höchstens 2500 Kombinationen eingrenzen.');
+  }
+ }
  if(!pairs.length||pairs.length>2500)throw new Error('Bitte 1 bis 2500 gültige Kombinationen wählen; schnell muss kleiner als langsam sein.');
  return pairs;
 }

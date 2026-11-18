@@ -8,22 +8,23 @@ export const STRATEGIES=[
  {id:'bollinger',name:'Bollinger-Rückkehr',group:'Klassisch',description:'Kauf unter dem unteren Band, Verkauf bei Rückkehr zum Mittelwert.'},
  {id:'breakout',name:'Kanalausbruch',group:'Klassisch',description:'Kauf über dem höchsten vorherigen Schlusskurs; Verkauf unter dem vorherigen Tief.'},
  {id:'momentum',name:'Momentum',group:'Klassisch',description:'Long bei positiver Veränderung über das Betrachtungsfenster.'},
- {id:'dca',name:'12 Investitionsstufen',group:'Automatisch',description:'Zielquote monatlich um ein Zwölftel erhöhen; Finanzierung aus vorhandenem Cash, keine weiteren Einzahlungen.'},
+ {id:'dca',name:'Monatliche Investitionsstufen',group:'Automatisch',description:'Zielquote monatlich in gleich großen Stufen bis zur gewählten Einstiegsdauer erhöhen; Finanzierung aus vorhandenem Cash, keine weiteren Einzahlungen.'},
  {id:'contrarian',name:'SMA-Gegentrend',group:'Experimentell',description:'Umgekehrte Trendregel: Long, solange der schnelle SMA unter dem langsamen liegt.'},
  {id:'grid',name:'Drawdown-Stufen',group:'Experimentell',description:'Je Rückgangsstufe vom vorherigen Fensterhoch eine weitere Kapitalstufe investieren; bei Erholung abbauen.'},
- {id:'seasonal',name:'November bis April',group:'Experimentell',description:'Saisonale Kalenderregel: Long von November bis April; sonst Cash.'}
+ {id:'seasonal',name:'Saisonale Monatsstrategie',group:'Experimentell',description:'Saisonale Kalenderregel: Long vom gewählten Startmonat bis einschließlich Endmonat; sonst Cash.'}
 ] as const;
 export type StrategyId=typeof STRATEGIES[number]['id'];
 export type OrderType='market'|'limit'|'stop'|'stop-limit';
 export type Variant={id:string;strategy:StrategyId;order:OrderType;name:string;automation:boolean};
-export type LabOptions={fast:number;slow:number;lookback:number;rsiLow:number;rsiHigh:number;band:number;gridStep:number;gridLevels:number;costBps:number;slippageBps:number;capital:number;monthly:number;allocation:number;offset:number;expiry:number;stopLoss:number;takeProfit:number;trailing:number;maxHold:number;cooldown:number;maxDrawdown:number;cadence:'daily'|'weekly'|'monthly';rebalance:boolean};
-export const DEFAULT_LAB:LabOptions={fast:50,slow:200,lookback:20,rsiLow:30,rsiHigh:70,band:2,gridStep:5,gridLevels:5,costBps:10,slippageBps:0,capital:10000,monthly:0,allocation:100,offset:1,expiry:5,stopLoss:0,takeProfit:0,trailing:0,maxHold:0,cooldown:0,maxDrawdown:0,cadence:'daily',rebalance:false};
+export type LabOptions={entryMonths:number;seasonStart:number;seasonEnd:number;fast:number;slow:number;lookback:number;rsiLow:number;rsiHigh:number;band:number;gridStep:number;gridLevels:number;costBps:number;slippageBps:number;capital:number;monthly:number;allocation:number;offset:number;expiry:number;stopLoss:number;takeProfit:number;trailing:number;maxHold:number;cooldown:number;maxDrawdown:number;cadence:'daily'|'weekly'|'monthly';rebalance:boolean};
+export const DEFAULT_LAB:LabOptions={entryMonths:12,seasonStart:11,seasonEnd:4,fast:50,slow:200,lookback:20,rsiLow:30,rsiHigh:70,band:2,gridStep:5,gridLevels:5,costBps:10,slippageBps:0,capital:10000,monthly:0,allocation:100,offset:1,expiry:5,stopLoss:0,takeProfit:0,trailing:0,maxHold:0,cooldown:0,maxDrawdown:0,cadence:'daily',rebalance:false};
 export type Trade={date:string;signalDate:string;side:'Kauf'|'Verkauf';price:number;quantity:number;fee:number;reason:string};
 export type LabResult={variant:Variant;curve:Point[];returnCurve:Point[];invested:Point[];paidIn:number;profit:number;trades:Trade[];fees:number;turnover:number;exposure:number;cancelled:number;halted:boolean;metrics:ReturnType<typeof metrics>};
 function ema(p:Point[],window:number){const initial=sma(p,window),out:(number|null)[]=p.map(()=>null);let previous:number|null=null;for(let i=0;i<p.length;i++){if(i===window-1)previous=initial[i];else if(i>=window)previous=p[i].value*(2/(window+1))+previous!*(1-2/(window+1));out[i]=previous;}return out;}
 export function wilderRsi(p:Point[],window:number){let gain=0,loss=0;return p.map((v,i)=>{if(!i)return null;const delta=v.value-p[i-1].value;if(i<=window){gain+=Math.max(0,delta)/window;loss+=Math.max(0,-delta)/window;}else {gain=(gain*(window-1)+Math.max(0,delta))/window;loss=(loss*(window-1)+Math.max(0,-delta))/window;}return i<window?null:gain===0&&loss===0?50:loss===0?100:100-100/(1+gain/loss);});}
 export function validateLab(o:LabOptions){
  const integer=(v:number,min:number,max:number)=>Number.isInteger(v)&&v>=min&&v<=max;
+ if(!integer(o.entryMonths??12,1,60)||!integer(o.seasonStart??11,1,12)||!integer(o.seasonEnd??4,1,12))throw new Error('Ungültige Einstiegsdauer oder Saisonmonate.');
  if(!integer(o.fast,2,999)||!integer(o.slow,o.fast+1,1000)||!integer(o.lookback,2,1000)||!integer(o.gridLevels,1,20)||!integer(o.expiry,1,100)||!integer(o.maxHold,0,10000)||!integer(o.cooldown,0,1000))throw new Error('Fenster, Stufen und Gültigkeit müssen ganze Zahlen innerhalb der angezeigten Grenzen sein; schnell < langsam.');
  if(Object.values(o).some(v=>typeof v==='number'&&!Number.isFinite(v))||o.capital<=0||o.monthly<0||o.monthly>1e12||o.costBps<0||o.costBps>100||o.slippageBps<0||o.slippageBps>100||o.allocation<=0||o.allocation>100||o.offset<0||o.offset>50||o.band<=0||o.band>10||o.gridStep<=0||o.gridStep>50||o.rsiLow<0||o.rsiHigh>100||o.rsiLow>=o.rsiHigh||[o.stopLoss,o.trailing,o.maxDrawdown].some(v=>v<0||v>=100)||o.takeProfit<0||o.takeProfit>1000)throw new Error('Ungültige Parameter: Prozentwerte und Kosten müssen innerhalb der angezeigten Grenzen liegen.');
 }
@@ -89,8 +90,8 @@ export function runVariant(p:Point[],start:number,end:number,v:Variant,o:LabOpti
    case 'bollinger':{const m=mean[i]!,variance=p.slice(i-o.lookback+1,i+1).reduce((sum,x)=>sum+(x.value-m)**2,0)/o.lookback;if(price<m-o.band*Math.sqrt(variance))signalState=1;else if(price>=m)signalState=0;target=signalState;break;}
    case 'breakout':{const previous=p.slice(i-o.lookback,i).map(x=>x.value);if(price>Math.max(...previous))signalState=1;else if(price<Math.min(...previous))signalState=0;target=signalState;break;}
    case 'grid':{const top=Math.max(...p.slice(i-o.lookback,i).map(x=>x.value));target=Math.min(o.gridLevels,Math.floor(Math.max(0,1-price/top)/(o.gridStep/100)))/o.gridLevels;break;}
-   case 'dca':{const months=(Number(p[i].date.slice(0,4))-Number(p[start].date.slice(0,4)))*12+Number(p[i].date.slice(5,7))-Number(p[start].date.slice(5,7));target=Math.min(1,(months+1)/12);break;}
-   case 'seasonal':{const month=Number(p[i].date.slice(5,7));target=month>=11||month<=4?1:0;break;}
+   case 'dca':{const months=(Number(p[i].date.slice(0,4))-Number(p[start].date.slice(0,4)))*12+Number(p[i].date.slice(5,7))-Number(p[start].date.slice(5,7));target=Math.min(1,(months+1)/(o.entryMonths??12));break;}
+   case 'seasonal':{const month=Number(p[i].date.slice(5,7));const first=o.seasonStart??11,last=o.seasonEnd??4;target=Number(first<=last?month>=first&&month<=last:month>=first||month<=last);break;}
   }
   target*=o.allocation/100;
   if(v.automation&&i-lastExit<=o.cooldown)target=0;

@@ -35,7 +35,7 @@ export default function Chart({showLegend=true,lines,log=false,cycles=false,cycl
  const nearest=hoverDate===null?[]:valid.filter(l=>!l.dashed&&l.points.length&&hoverDate>=Date.parse(l.points[0].date)&&hoverDate<=Date.parse(l.points.at(-1)!.date)).map(l=>{
   let near=l.points[0];for(const p of l.points)if(Math.abs(Date.parse(p.date)-hoverDate)<Math.abs(Date.parse(near.date)-hoverDate))near=p;
   return {...l,point:near};
- });
+ }).sort((a,b)=>b.point.value-a.point.value||a.name.localeCompare(b.name,'de'));
  const inRange=(year:number)=>Date.UTC(year,0,1)>=minX&&Date.UTC(year,0,1)<=maxX;
  const showZigzag=cycleKinds.includes('B')&&cycleKinds.includes('C');
 

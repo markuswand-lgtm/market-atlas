@@ -20,7 +20,7 @@ type Props={points:Point[];from:string;to:string;variants:Variant[];options:LabO
 export default function StrategySearch({points,from,to,variants,options,apply}:Props){
  const [id,select]=useState(variants[0]?.id||'');
  const variant=variants.find(v=>v.id===id)||variants[0];
- const [report,setReport]=useState<{patch:Patch;train:number;test:number;count:number;start:string;split:string;end:string}|null>(null);
+ const [report,setReport]=useState<{ranking:{patch:Patch;train:number}[];patch:Patch;train:number;test:number;count:number;start:string;split:string;end:string}|null>(null);
  const [error,setError]=useState('');
  if(!variant)return null;
  const presets=suggestions(variant.strategy);
@@ -36,9 +36,9 @@ export default function StrategySearch({points,from,to,variants,options,apply}:P
    if(start<0||end-start<19)throw Error('Mindestens 20 Kurse nach der gemeinsamen Aufwärmphase erforderlich.');
    if(p.slice(start-warm).some(v=>v.value<=0))throw Error('Die Simulation erfordert positive Kurse.');
    const score=(patch:Patch,a:number,b:number)=>runVariant(p.slice(0,b+1),a,b,variant,{...options,...patch}).returnCurve.at(-1)!.value/100-1;
-   const ranked=candidates.map(patch=>({patch,train:score(patch,start,split-1)})).sort((a,b)=>b.train-a.train);
-   setReport({...ranked[0],test:score(ranked[0].patch,split,end),count:ranked.length,start:p[start].date,split:p[split].date,end:p[end].date});
+   const ranked=candidates.filter((p,i)=>candidates.findIndex(other=>JSON.stringify(p)===JSON.stringify(other))===i).map(patch=>({patch,train:score(patch,start,split-1)})).sort((a,b)=>b.train-a.train);
+   setReport({ranking:ranked.slice(0,5),...ranked[0],test:score(ranked[0].patch,split,end),count:ranked.length,start:p[start].date,split:p[split].date,end:p[end].date});
   }catch(e){setError((e as Error).message);}
  }
- return <details className="lab-settings"><summary>Einzelne Variante optimieren</summary><div className="strategy-controls"><label>Variante<select value={variant.id} onChange={e=>{select(e.target.value);setReport(null);setError('');}}>{variants.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button className="quiet-button" onClick={optimize}>Im Vergleichszeitraum optimieren</button></div><p>Startvorschlag: {describe(presets[Math.floor(presets.length/2)])}. Die Suche maximiert die zeitgewichtete Rendite nach Kosten in den ersten 70 % der Testkurse. Die letzten 30 % prüfen die gewählten Parameter separat.</p>{error&&<p role="alert">{error}</p>}{report&&<div><b>{describe(report.patch)}</b><p>{report.count} Kandidaten · Training ab {report.start}: {percent(report.train)} · Prüfzeitraum {report.split} bis {report.end}: {percent(report.test)}</p><button className="quiet-button" onClick={()=>apply(report.patch)}>Für die gemeinsamen Strategieparameter übernehmen</button></div>}</details>;
+ return <details className="lab-settings"><summary>Einzelne Variante optimieren</summary><div className="strategy-controls"><label>Variante<select value={variant.id} onChange={e=>{select(e.target.value);setReport(null);setError('');}}>{variants.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button className="quiet-button" onClick={optimize}>Im Vergleichszeitraum optimieren</button></div><p>Startvorschlag: {describe(presets[Math.floor(presets.length/2)])}. Die Suche maximiert die zeitgewichtete Rendite nach Kosten in den ersten 70 % der Testkurse. Die letzten 30 % prüfen die gewählten Parameter separat.</p>{error&&<p role="alert">{error}</p>}{report&&<div><b>Beste getestete Parametersätze</b><ol>{report.ranking.map(row=><li key={JSON.stringify(row.patch)}>{describe(row.patch)} · Trainingsrendite {percent(row.train)}</li>)}</ol><p>{report.count} Kandidaten · Training ab {report.start}: {percent(report.train)} · Prüfzeitraum {report.split} bis {report.end}: {percent(report.test)}</p><button className="quiet-button" onClick={()=>apply(report.patch)}>Für die gemeinsamen Strategieparameter übernehmen</button></div>}</details>;
 }

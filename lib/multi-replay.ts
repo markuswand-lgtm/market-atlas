@@ -4,7 +4,7 @@ import type {LabOptions} from './strategy-lab.ts';
 
 export type Range={from:string;to:string};
 type Metrics={capital:number;gain:number;drawdown:number};
-export type Comparison={asset:string;range:Range;actual:Range;id:string;name:string;metrics:Metrics;benchmark:Metrics;delta:Metrics;wins:number};
+export type Comparison={asset:string;range:Range;actual:Range;id:string;name:string;metrics:Metrics;benchmark:Metrics;delta:Metrics;wins:number;trades:number;exposure:number;fees:number;holdTrades:number;holdFees:number;holdExposure:number};
 function metrics(row:ReturnType<typeof replay>['benchmark']):Metrics{
  return {capital:row.capital.at(-1)!.value,gain:row.gain,drawdown:row.drawdown};
 }
@@ -20,7 +20,7 @@ export function compareRanges(asset:string,points:Point[],ranges:Range[],group:S
    for(const result of report.results){
     const m=metrics(result);
     const delta={capital:difference(m.capital,benchmark.capital),gain:difference(m.gain,benchmark.gain),drawdown:difference(m.drawdown,benchmark.drawdown)};
-    rows.push({asset,range,actual:{from:report.testFrom,to:report.to},id:result.variant.id,name:result.variant.name,metrics:m,benchmark,delta,wins:Object.values(delta).filter(x=>x>0).length});
+    rows.push({asset,range,actual:{from:report.testFrom,to:report.to},id:result.variant.id,name:result.variant.name,metrics:m,benchmark,delta,wins:Object.values(delta).filter(x=>x>0).length,trades:result.trades,exposure:result.exposure,fees:result.fees,holdTrades:report.benchmark.trades,holdFees:report.benchmark.fees,holdExposure:report.benchmark.exposure});
    }
   }catch(e){errors.push(asset+' · '+range.from+' bis '+range.to+' · '+(e as Error).message);}
  }

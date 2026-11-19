@@ -31,7 +31,7 @@ export function evaluateHoldout(points:Point[],split:number,end:number,variant:V
  const run=runVariant(points,split,end,variant,options);
  if(run.metrics?.total==null||run.metrics.drawdown==null)throw Error('Prüfkennzahlen fehlen.');
  const curves=chartCurves(run);
- return {capital:downsample(curves.capital),losses:downsample(curves.losses),gain:run.metrics.total,drawdown:run.metrics.drawdown,trades:run.trades.length};
+ return {capital:downsample(curves.capital),losses:downsample(curves.losses),gain:run.metrics.total,drawdown:run.metrics.drawdown,trades:run.trades.length,exposure:run.exposure,fees:run.fees};
 }
 export type Result=ReturnType<typeof chartCurves>&{ranking:(Candidate&{holdout:ReturnType<typeof evaluateHoldout>})[];variant:Variant;settings:Partial<LabOptions>;training:number;gain:number;drawdown:number;trades:number;tested:number;size:number};
 export function batchSearch(input:Request,progress:(name:string,done:number,total:number)=>void=()=>{}){

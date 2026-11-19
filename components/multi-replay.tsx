@@ -7,6 +7,7 @@ import type {SavedGroup} from '../lib/fixed-sets';
 import type {LabOptions} from '../lib/strategy-lab';
 import type {Range,Comparison,compareRanges} from '../lib/multi-replay';
 import DataTable from './data-table';
+import StrategyRanking from './strategy-ranking';
 
 const assets=ASSETS.filter(a=>a.frequency==='daily');
 const fmt=(v:number)=>v.toLocaleString('de-DE',{maximumFractionDigits:2});
@@ -51,6 +52,7 @@ export default function MultiReplay({group,asset,from,to,options}:{group:SavedGr
  <button onClick={()=>{clear();setRanges([...ranges,{from:'',to:''}]);}}>Zeitraum hinzufügen</button></fieldset>
  <button className="primary-button" disabled={!valid||!ids.length||!!status} onClick={run}>Mehrfachvergleich starten</button> {status&&<><span role="status">{status}</span> <button onClick={stop}>Abbrechen</button></>}
  {errors.map((error,i)=><p key={i} role="alert">{error}</p>)}
+ {rows.length>0&&<StrategyRanking rows={rows} group={group} expected={ids.length*unique.length}/> }
  {rows.length>0&&<><p>Eine positive Differenz bedeutet einen Vorteil gegenüber Buy &amp; Hold. Beim Drawdown zählt der geringere Verlust. Gleichstände zählen als null Siege. Kapitalbeträge gelten in der jeweiligen Asset-Währung.</p><div className="table-scroll"><DataTable><thead><tr>{['Asset','Gewünscht von','Gewünscht bis','Geprüft von','Geprüft bis','Parametersatz','Siege von 3','Endkapital','Buy & Hold Kapital','Δ Kapital','Rendite','Buy & Hold Rendite','Δ Rendite (Pp.)','Max. Drawdown','Buy & Hold Drawdown','Δ Drawdown (Pp.)'].map(h=><th key={h}>{h}</th>)}</tr></thead>
  <tbody>{rows.map(r=>{const unit=r.asset==='DAX'?' EUR':r.asset==='Nikkei 225'?' JPY':' USD';
  function delta(v:number){return <td className={v>0?'positive':v<0?'negative':''}>{(v>0?'+':'')+fmt(v)}</td>;}

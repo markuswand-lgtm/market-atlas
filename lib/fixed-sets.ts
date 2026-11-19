@@ -3,7 +3,7 @@ import {evaluateHoldout} from './batch-search.ts';
 import {validateLab,warmup,type LabOptions,type Variant} from './strategy-lab.ts';
 
 export type FixedSet={variant:Variant;settings:Partial<LabOptions>;color:string};
-export type SavedGroup={id:string;name:string;source:string;from:string;to:string;options:LabOptions;sets:FixedSet[]};
+export type SavedGroup={id:string;name:string;source:string;from:string;to:string;options:LabOptions;testRanges?:{from:string;to:string}[];sets:FixedSet[]};
 export function replay(group:SavedGroup,rows:Point[],from:string,to:string,current:LabOptions){
  if(!group.sets.length||!validDate(from)||!validDate(to)||from>to)throw Error('Bitte Auswahl und Zeitraum prüfen.');
  const assumptions={capital:current.capital,monthly:current.monthly,costBps:current.costBps,slippageBps:current.slippageBps};

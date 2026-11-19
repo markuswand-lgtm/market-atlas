@@ -12,10 +12,11 @@ function difference(a:number,b:number){
  return Math.abs(a-b)<=Number.EPSILON*16*Math.max(1,Math.abs(a),Math.abs(b))?0:a-b;
 }
 export function compareRanges(asset:string,points:Point[],ranges:Range[],group:SavedGroup,options:LabOptions){
- const rows:Comparison[]=[],errors:string[]=[];
+ const rows:Comparison[]=[],errors:string[]=[],charts:{asset:string;range:Range;report:ReturnType<typeof replay>}[]=[];
  for(const range of ranges){
   try{
    const report=replay(group,points,range.from,range.to,options);
+   charts.push({asset,range,report});
    const benchmark=metrics(report.benchmark);
    for(const result of report.results){
     const m=metrics(result);
@@ -24,5 +25,5 @@ export function compareRanges(asset:string,points:Point[],ranges:Range[],group:S
    }
   }catch(e){errors.push(asset+' · '+range.from+' bis '+range.to+' · '+(e as Error).message);}
  }
- return {rows,errors};
+ return {rows,errors,charts};
 }
